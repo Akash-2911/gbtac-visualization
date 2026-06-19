@@ -19,9 +19,8 @@ stages:
       displayName: 'Install Node.js'
 
     - script: |
-        cd backend
-        npm install
-      displayName: 'Install Backend Dependencies'
+        echo "Backend not initialized yet - skipping dependency install"
+      displayName: 'Placeholder - Backend Dependencies'
 
 - stage: Deploy_Staging
   displayName: 'Deploy to Staging'
