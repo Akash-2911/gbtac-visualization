@@ -17,12 +17,12 @@ SHEET_NAME = "data (77)"
 SITE_ID    = 1
 CONN_STR = (
     "Driver={ODBC Driver 18 for SQL Server};"
-    "Server=sqlsrv-gbtac-dev.database.windows.net,1433;"
+    "Server=sqlsrv-gbtac-dev1.database.windows.net,1433;"
     "Database=sql-gbtac-dev;"
     "Encrypt=yes;"
     "TrustServerCertificate=no;"
 )
-BATCH_SIZE = 200  # smaller batches = less data lost on disconnect
+BATCH_SIZE = 200
 
 def get_token():
     credential = AzureCliCredential()
@@ -83,7 +83,6 @@ def load_and_clean(filepath: str):
         "alarm_raw", "data_quality",
     ]]
 
-    # Sort by timestamp so resume skips from correct point
     df = df.sort_values("timestamp_utc").reset_index(drop=True)
 
     print(f"  Clean rows ready to insert: {len(df):,}")
@@ -123,15 +122,14 @@ def insert_batches(df: pd.DataFrame):
     print("\nConnecting to Azure SQL ...")
     conn = get_connection()
 
-    # Check how many rows already inserted — skip those
     already = get_existing_count(conn)
     if already > 0:
         print(f"  Resuming — {already:,} rows already in DB, skipping those ...")
         df = df.iloc[already:].reset_index(drop=True)
 
     rows = [make_row(r) for r in df.itertuples(index=False)]
-    total     = len(rows)
-    inserted  = 0
+    total    = len(rows)
+    inserted = 0
 
     if total == 0:
         print("All rows already inserted!")
@@ -151,7 +149,6 @@ def insert_batches(df: pd.DataFrame):
             inserted += len(batch)
             print(f"  {inserted + already:,} / {total + already:,}", end="\r")
         except pyodbc.OperationalError:
-            # Connection dropped — reconnect and continue
             print(f"\n  Connection lost at {inserted + already:,} rows. Reconnecting ...")
             conn.close()
             conn = get_connection()
