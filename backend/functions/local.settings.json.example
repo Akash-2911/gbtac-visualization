@@ -1,0 +1,11 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "PBI_TENANT_ID": "your-tenant-id-here",
+    "PBI_CLIENT_ID": "your-powerbi-embed-app-client-id",
+    "PBI_CLIENT_SECRET": "your-client-secret-here",
+    "PBI_WORKSPACE_ID": "your-workspace-id-here"
+  }
+}
