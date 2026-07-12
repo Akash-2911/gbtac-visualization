@@ -1,0 +1,57 @@
+const { app } = require("@azure/functions");
+const axios = require("axios");
+const { getPowerBiAccessToken } = require("../../shared/powerbiAuth");
+
+app.http("powerbiToken", {
+  methods: ["GET"],
+  authLevel: "anonymous", // TODO: switch to protected once JWT middleware is wired in
+  route: "powerbi/token",
+  handler: async (request, context) => {
+    try {
+      const reportId = request.query.get("reportId");
+      const workspaceId = process.env.PBI_WORKSPACE_ID;
+
+      if (!reportId) {
+        return {
+          status: 400,
+          jsonBody: { error: "Missing required query param: reportId" },
+        };
+      }
+
+      // Step 1: get AAD token for our service principal
+      const aadToken = await getPowerBiAccessToken();
+
+      // Step 2: ask Power BI for report details (to get the dataset/report URL embed needs)
+      const reportRes = await axios.get(
+        `https://api.powerbi.com/v1.0/myorg/groups/${workspaceId}/reports/${reportId}`,
+        { headers: { Authorization: `Bearer ${aadToken}` } }
+      );
+
+      const { embedUrl, datasetId } = reportRes.data;
+
+      // Step 3: generate the embed token itself
+      const embedTokenRes = await axios.post(
+        `https://api.powerbi.com/v1.0/myorg/groups/${workspaceId}/reports/${reportId}/GenerateToken`,
+        { accessLevel: "View" },
+        { headers: { Authorization: `Bearer ${aadToken}` } }
+      );
+
+      return {
+        status: 200,
+        jsonBody: {
+          embedToken: embedTokenRes.data.token,
+          embedUrl: embedUrl,
+          reportId: reportId,
+          datasetId: datasetId,
+          expiration: embedTokenRes.data.expiration,
+        },
+      };
+    } catch (err) {
+      context.error("Power BI token generation failed:", err.message);
+      return {
+        status: 500,
+        jsonBody: { error: "Failed to generate embed token", details: err.message },
+      };
+    }
+  },
+});
