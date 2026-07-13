@@ -8,6 +8,8 @@
   "dependencies": {
     "@azure/functions": "^4.5.0",
     "@azure/msal-node": "^2.13.1",
+    "@azure/storage-blob": "^12.24.0",
+    "@azure/service-bus": "^7.9.4",
     "axios": "^1.7.7",
     "jsonwebtoken": "^9.0.2",
     "jwks-rsa": "^3.1.0"
