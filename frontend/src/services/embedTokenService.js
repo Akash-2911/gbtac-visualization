@@ -20,11 +20,16 @@ export async function fetchEmbedToken(reportId) {
   }
 
   const data = await response.json();
-  if (!data.token || !data.expiry) {
-    throw new Error('Token response missing expected fields (token/expiry).');
+  if (!data.embedToken || !data.expiration) {
+    throw new Error('Token response missing expected fields (embedToken/expiration).');
   }
 
-  return data;
+  // Normalize field names so the rest of the app has one consistent shape.
+  return {
+    token: data.embedToken,
+    expiry: data.expiration,
+    embedUrl: data.embedUrl,
+  };
 }
 
 async function mockFetchEmbedToken(reportId) {
@@ -32,5 +37,6 @@ async function mockFetchEmbedToken(reportId) {
   return {
     token: 'MOCK_TOKEN_REPLACE_ONCE_ENDPOINT_IS_LIVE',
     expiry: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    embedUrl: 'https://app.powerbi.com/reportEmbed?reportId=mock&groupId=mock',
   };
 }

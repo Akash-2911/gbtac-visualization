@@ -52,13 +52,13 @@ export default function PowerBIReport({ reportKey, height = '600px' }) {
     setError(null);
 
     try {
-      const { token, expiry } = await fetchEmbedToken(config.reportId);
+      const { token, expiry, embedUrl } = await fetchEmbedToken(config.reportId);
 
-      setEmbedConfig({
-        type: 'report',
-        id: config.reportId,
-        embedUrl: `https://app.powerbi.com/reportEmbed?reportId=${config.reportId}&groupId=${WORKSPACE_ID}`,
-        accessToken: token,
+setEmbedConfig({
+  type: 'report',
+  id: config.reportId,
+  embedUrl: embedUrl,
+  accessToken: token,
         tokenType: models.TokenType.Embed,
         pageName: config.pageId,
         settings: {
