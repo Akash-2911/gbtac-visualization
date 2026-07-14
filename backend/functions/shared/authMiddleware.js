@@ -23,6 +23,19 @@ function getSigningKey(header, callback) {
 // Verifies a raw JWT string, returns the decoded token payload if valid
 function verifyToken(token) {
   return new Promise((resolve, reject) => {
+
+    // TEMP DEBUG — log what we expect vs what's in token
+    const decoded_unverified = jwt.decode(token);
+    console.log("TOKEN DEBUG:", JSON.stringify({
+      iss: decoded_unverified?.iss,
+      aud: decoded_unverified?.aud,
+      ver: decoded_unverified?.ver,
+      exp: decoded_unverified?.exp,
+      expected_issuer: `https://login.microsoftonline.com/${tenantId}/v2.0`,
+      expected_audience: clientId,
+    }, null, 2));
+    // END TEMP DEBUG
+
     jwt.verify(
       token,
       getSigningKey,
@@ -33,6 +46,7 @@ function verifyToken(token) {
       },
       (err, decoded) => {
         if (err) {
+          console.log("JWT VERIFY ERROR:", err.message);
           reject(err);
         } else {
           resolve(decoded);
