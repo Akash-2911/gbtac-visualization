@@ -1,13 +1,14 @@
 import React from 'react';
 import PowerBIReport from '../components/PowerBIReport';
+import PageContainer from '../components/PageContainer';
+import ReportCard from '../components/ReportCard';
 
 export default function Solar() {
   return (
-    <div>
-      <h1 style={{ fontSize: '26px', marginBottom: '20px' }}>Solar</h1>
-      <div style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
+    <PageContainer title="Solar" subtitle="Real-time solar collection and power output data">
+      <ReportCard>
         <PowerBIReport reportKey="solarGeneration" />
-      </div>
-    </div>
+      </ReportCard>
+    </PageContainer>
   );
 }

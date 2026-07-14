@@ -4,14 +4,23 @@ const API_BASE_URL =
 
 const USE_MOCK = process.env.REACT_APP_USE_MOCK_EMBED_TOKEN === 'true';
 
+import { getAccessToken } from '../auth/getAccessToken';
+
 export async function fetchEmbedToken(reportId) {
   if (USE_MOCK) {
     return mockFetchEmbedToken(reportId);
   }
 
+  const accessToken = await getAccessToken();
+
   const response = await fetch(
     `${API_BASE_URL}/powerbi/token?reportId=${encodeURIComponent(reportId)}`,
-    { method: 'GET' }
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
   );
 
   if (!response.ok) {

@@ -1,20 +1,20 @@
 import React from 'react';
 import PowerBIReport from '../components/PowerBIReport';
+import PageContainer from '../components/PageContainer';
+import ReportCard from '../components/ReportCard';
 
 export default function Compare() {
   return (
-    <div>
-      <h1 style={{ fontSize: '26px', marginBottom: '20px' }}>Compare</h1>
-
+    <PageContainer title="Compare" subtitle="Energy consumed vs energy generated">
       <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '8px' }}>Energy vs Solar</p>
-      <div style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden', marginBottom: '24px' }}>
+      <ReportCard>
         <PowerBIReport reportKey="energyVsSolar" />
-      </div>
+      </ReportCard>
 
-      <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '8px' }}>Energy & Solar Breakdown</p>
-      <div style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
+      <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: '24px 0 8px' }}>Energy & Solar Breakdown</p>
+      <ReportCard>
         <PowerBIReport reportKey="energySolarBreakdown" />
-      </div>
-    </div>
+      </ReportCard>
+    </PageContainer>
   );
 }

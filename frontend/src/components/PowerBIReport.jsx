@@ -34,7 +34,7 @@ const REPORT_MAP = {
   },
 };
 
-export default function PowerBIReport({ reportKey, height = '600px' }) {
+export default function PowerBIReport({ reportKey, height = 'calc(100vh - 220px)' }) {
   const [embedConfig, setEmbedConfig] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
