@@ -62,10 +62,22 @@ app.http("powerbiToken", {
         },
       };
     } catch (err) {
-      context.error("Power BI token generation failed:", err.message);
+      context.error("Power BI token generation failed:", {
+        message: err.message,
+        status: err.status,
+        stack: err.stack,
+      });
       return {
         status: err.status || 500,
-        jsonBody: { error: "Failed to generate embed token", details: err.message },
+        jsonBody: {
+          error: "Failed to generate embed token",
+          details: err.message,
+          // Temporary debug info — remove before production
+          debug: {
+            status: err.status,
+            stack: err.stack,
+          },
+        },
       };
     }
   },
