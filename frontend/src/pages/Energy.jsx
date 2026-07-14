@@ -3,11 +3,11 @@ import PowerBIReport from '../components/PowerBIReport';
 import PageContainer from '../components/PageContainer';
 import ReportCard from '../components/ReportCard';
 
-export default function Weather() {
+export default function Energy() {
   return (
-    <PageContainer title="Weather" subtitle="Black Diamond weather station vs greenhouse performance">
+    <PageContainer title="Energy" subtitle="Energy consumption across all greenhouse systems">
       <ReportCard>
-        <PowerBIReport reportKey="weather" />
+        <PowerBIReport reportKey="greenhouseEnergy" />
       </ReportCard>
     </PageContainer>
   );
