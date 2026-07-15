@@ -1,6 +1,24 @@
 import React from 'react';
+import { useMsal } from '@azure/msal-react';
 
 export default function TopBar({ pageTitle }) {
+  const { instance } = useMsal();
+  const account = instance.getActiveAccount();
+
+  const displayName = account?.name || account?.username || 'User';
+  const initials = displayName
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  const handleLogout = () => {
+    instance.logoutRedirect({
+      postLogoutRedirectUri: window.location.origin + '/login',
+    });
+  };
+
   return (
     <header
       style={{
@@ -36,14 +54,36 @@ export default function TopBar({ pageTitle }) {
             fontWeight: 700,
           }}
         >
-          AX
+          {initials}
         </div>
-        <span style={{ fontSize: '14px', color: 'var(--text-primary)' }}>ABC XYZ</span>
-        <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--accent-blue)', backgroundColor: '#EFF6FF', padding: '2px 8px', borderRadius: '4px' }}>
+        <span style={{ fontSize: '14px', color: 'var(--text-primary)' }}>{displayName}</span>
+        <span
+          style={{
+            fontSize: '11px',
+            fontWeight: 600,
+            color: 'var(--accent-blue)',
+            backgroundColor: '#EFF6FF',
+            padding: '2px 8px',
+            borderRadius: '4px',
+          }}
+        >
           ADMIN
         </span>
         <span style={{ color: 'var(--border)' }}>|</span>
-        <a href="#logout" style={{ fontSize: '14px', color: 'var(--status-red-text)', textDecoration: 'none', fontWeight: 500 }}>↪ Logout</a>
+        <button
+          onClick={handleLogout}
+          style={{
+            fontSize: '14px',
+            color: 'var(--status-red-text)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: 500,
+            padding: 0,
+          }}
+        >
+          ↪ Logout
+        </button>
       </div>
     </header>
   );
