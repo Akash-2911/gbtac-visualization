@@ -1,0 +1,40 @@
+:root {
+  --sidebar-bg: #0B1B33;
+  --bg: #F5F6F8;
+  --surface: #FFFFFF;
+  --border: #E5E7EB;
+
+  --text-primary: #0F172A;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
+
+  --accent-blue: #3B82F6;
+  --accent-purple: #7C3AED;
+
+  --status-green-bg: #DCFCE7;
+  --status-green-text: #16A34A;
+  --status-orange-bg: #FFEDD5;
+  --status-orange-text: #EA580C;
+  --status-red-bg: #FEE2E2;
+  --status-red-text: #DC2626;
+
+  --font-body: 'Inter', -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  margin: 0;
+}

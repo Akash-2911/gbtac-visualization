@@ -1,0 +1,26 @@
+# Azure Functions
+backend/functions/local.settings.json
+backend/functions/bin/
+backend/functions/obj/
+backend/functions/.python_packages/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+frontend/build/
+frontend/dist/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

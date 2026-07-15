@@ -1,0 +1,19 @@
+{
+  "name": "gbtac-functions",
+  "version": "1.0.0",
+  "main": "src/functions/*.js",
+  "scripts": {
+    "start": "func start"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.5.0",
+    "@azure/msal-node": "^2.13.1",
+    "@azure/service-bus": "^7.9.4",
+    "@azure/storage-blob": "^12.33.0",
+    "axios": "^1.7.7",
+    "exceljs": "^4.4.0",
+    "jsonwebtoken": "^9.0.2",
+    "jwks-rsa": "^3.1.0",
+    "mssql": "^12.7.0"
+  }
+}

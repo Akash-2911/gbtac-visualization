@@ -1,0 +1,16 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "PBI_TENANT_ID": "your-tenant-id-here",
+    "PBI_CLIENT_ID": "your-powerbi-embed-app-client-id",
+    "PBI_CLIENT_SECRET": "your-client-secret-here",
+    "PBI_WORKSPACE_ID": "your-workspace-id-here"
+    "AUTH_TENANT_ID": "your-tenant-id-here",
+    "AUTH_CLIENT_ID": "your-gbtac-app-auth-client-id"
+    "STORAGE_CONNECTION_STRING": "your-storage-connection-string-here",
+    "SERVICEBUS_CONNECTION_STRING": "your-service-bus-connection-string-here",
+    "UPLOAD_QUEUE_NAME": "upload-processing"
+  }
+}
