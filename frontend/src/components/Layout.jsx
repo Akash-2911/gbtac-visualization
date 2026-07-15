@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import TopBar from './TopBar';
 
@@ -12,29 +12,52 @@ const navItems = [
   { path: '/ai-assistant', label: 'AI Assistant', beta: true },
 ];
 
-const bottomItems = [
-  { path: '/admin', label: 'Admin' },
-  { path: '/settings', label: 'Settings' },
-];
+const bottomItems = [{ path: '/settings', label: 'Settings' }];
 
 export default function Layout() {
   const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const currentLabel =
     [...navItems, ...bottomItems].find((item) =>
       item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)
     )?.label || 'Overview';
 
+  const closeMenu = () => setMenuOpen(false);
+
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div style={{ height: '100vh', overflow: 'hidden' }}>
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
+      <button
+        type="button"
+        className="gbtac-hamburger"
+        aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+        aria-expanded={menuOpen}
+        onClick={() => setMenuOpen(!menuOpen)}
+      >
+        {menuOpen ? '✕' : '☰'}
+      </button>
+
+      {menuOpen && <div className="gbtac-backdrop" onClick={closeMenu} aria-hidden="true" />}
+
       <nav
+        aria-label="Main navigation"
+        className={`gbtac-sidebar ${menuOpen ? 'open' : ''}`}
         style={{
-          width: '220px',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: 'var(--sidebar-width)',
           backgroundColor: 'var(--sidebar-bg)',
           padding: '20px 0',
-          flexShrink: 0,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
+          zIndex: 30,
         }}
       >
         <div>
@@ -42,19 +65,19 @@ export default function Layout() {
             <h2 style={{ fontSize: '18px', color: '#fff' }}>GBTAC</h2>
             <p style={{ fontSize: '12px', color: '#8FA0BD', margin: '2px 0 0' }}>Energy Systems</p>
           </div>
-
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {navItems.map((item) => (
               <li key={item.path}>
                 <NavLink
                   to={item.path}
                   end={item.path === '/'}
+                  onClick={closeMenu}
                   style={({ isActive }) => ({
                     display: 'flex',
-                    alignItems: 'center',
                     justifyContent: 'space-between',
+                    alignItems: 'center',
                     padding: '11px 20px',
-                    color: isActive ? '#fff' : '#B7C3D9',
+                    color: isActive ? '#fff' : 'var(--sidebar-text)',
                     backgroundColor: isActive ? 'rgba(59,130,246,0.15)' : 'transparent',
                     borderLeft: isActive ? '3px solid var(--accent-blue)' : '3px solid transparent',
                     textDecoration: 'none',
@@ -64,15 +87,7 @@ export default function Layout() {
                 >
                   {item.label}
                   {item.beta && (
-                    <span
-                      style={{
-                        fontSize: '10px',
-                        backgroundColor: 'var(--accent-purple)',
-                        color: '#fff',
-                        padding: '1px 6px',
-                        borderRadius: '999px',
-                      }}
-                    >
+                    <span style={{ fontSize: '10px', background: '#7C3AED', color: '#fff', padding: '1px 6px', borderRadius: '999px' }}>
                       BETA
                     </span>
                   )}
@@ -81,16 +96,16 @@ export default function Layout() {
             ))}
           </ul>
         </div>
-
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px' }}>
           {bottomItems.map((item) => (
             <li key={item.path}>
               <NavLink
                 to={item.path}
+                onClick={closeMenu}
                 style={({ isActive }) => ({
                   display: 'block',
                   padding: '10px 20px',
-                  color: isActive ? '#fff' : '#8FA0BD',
+                  color: isActive ? '#fff' : 'var(--sidebar-text)',
                   textDecoration: 'none',
                   fontSize: '13px',
                 })}
@@ -102,12 +117,93 @@ export default function Layout() {
         </ul>
       </nav>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div className="gbtac-topbar-wrap" style={{ position: 'fixed', top: 0, left: 'var(--sidebar-width)', right: 0, height: 'var(--topbar-height)', zIndex: 10 }}>
         <TopBar pageTitle={currentLabel} />
-        <main style={{ flex: 1, padding: '28px 32px' }}>
-          <Outlet />
-        </main>
       </div>
+
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="gbtac-main"
+        style={{
+          position: 'absolute',
+          top: 'var(--topbar-height)',
+          left: 'var(--sidebar-width)',
+          right: 0,
+          bottom: 0,
+          overflowY: 'auto',
+          padding: '28px 32px',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <Outlet />
+      </main>
+
+      <style>{`
+        .skip-link {
+          position: absolute;
+          top: -100px;
+          left: 8px;
+          background: var(--accent-blue);
+          color: #fff;
+          padding: 8px 14px;
+          border-radius: 6px;
+          font-size: 13px;
+          z-index: 100;
+          transition: top 0.15s;
+        }
+        .skip-link:focus {
+          top: 8px;
+        }
+        .gbtac-hamburger {
+          display: none;
+        }
+        .gbtac-backdrop {
+          display: none;
+        }
+        a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
+          outline: 2px solid var(--accent-blue);
+          outline-offset: 2px;
+        }
+
+        @media (max-width: 820px) {
+          .gbtac-hamburger {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-primary);
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 40;
+          }
+          .gbtac-sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.2s ease;
+            width: 240px !important;
+          }
+          .gbtac-sidebar.open {
+            transform: translateX(0);
+          }
+          .gbtac-backdrop.open, .gbtac-backdrop {
+            display: block;
+          }
+          .gbtac-topbar-wrap, .gbtac-main {
+            left: 0 !important;
+          }
+          .gbtac-main {
+            padding: 20px 16px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
