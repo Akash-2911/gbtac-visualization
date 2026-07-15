@@ -7,9 +7,7 @@ export default function ReportCard({ children }) {
         backgroundColor: '#FFFFFF',
         borderRadius: '10px',
         overflow: 'hidden',
-        flex: 1,
-        display: 'flex',
-        minHeight: '400px',
+        width: '100%',
         padding: '4px',
         boxShadow: '0 0 0 1px var(--border)',
       }}

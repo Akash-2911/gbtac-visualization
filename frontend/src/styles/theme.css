@@ -67,3 +67,16 @@ h1, h2, h3 {
   background: rgba(0,0,0,0.4);
   z-index: 20;
 }
+
+@media (max-width: 560px) {
+  .tt-label {
+    display: none;
+  }
+}
+
+/* Force the embedded Power BI iframe elements to fill their designated layout containers */
+.powerbi-report-container {
+  height: 100%;
+  width: 100%;
+  border: none;
+}
