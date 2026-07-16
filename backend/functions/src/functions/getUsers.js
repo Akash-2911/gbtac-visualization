@@ -29,7 +29,7 @@ const sqlConfig = {
 app.http("getUsers", {
   methods: ["GET"],
   authLevel: "anonymous",
-  route: "admin/users",
+  route: "dashboard/users",
   handler: async (request, context) => {
     try {
       // Only Admin and SuperAdmin can view user list
