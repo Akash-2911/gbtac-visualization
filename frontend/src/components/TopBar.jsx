@@ -69,16 +69,16 @@ export default function TopBar({ pageTitle }) {
 
       <div className="tb-right" style={{ display: 'flex', alignItems: 'center', gap: '18px', flexShrink: 0 }}>
         <div
-          onClick={() => navigate('/settings')}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') navigate('/settings');
-          }}
-          role="button"
-          tabIndex={0}
-          aria-label={`View settings for ${displayName}`}
-          className="tb-profile"
-          style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
-        >
+  onClick={() => navigate('/admin')}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') navigate('/admin');
+  }}
+  role="button"
+  tabIndex={0}
+  aria-label={`View admin panel for ${displayName}`}
+  className="tb-profile"
+  style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+>
           <div
             style={{
               width: '30px',

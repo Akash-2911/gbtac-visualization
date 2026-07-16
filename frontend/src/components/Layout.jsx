@@ -77,7 +77,7 @@ export default function Layout() {
         <div>
           <div style={{ padding: '0 20px', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '18px', color: '#fff' }}>GBTAC</h2>
-            <p style={{ fontSize: '12px', color: '#8FA0BD', margin: '2px 0 0' }}>Energy Systems</p>
+            <p style={{ fontSize: '12px', color: '#8FA0BD', margin: '2px 0 0' }}>Egy Systems</p>
           </div>
 
           <p
