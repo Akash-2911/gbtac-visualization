@@ -52,9 +52,11 @@ export default function Overview() {
       )}
 
       {/* Render directly inside the layout flow */}
-<div style={{ width: '100%', display: 'block' }}>
+
   <PowerBIReport reportKey="overview" />
-</div>
+<ReportCard>
+        <PowerBIReport reportKey="weather" />
+      </ReportCard>
     </PageContainer>
   );
 }
