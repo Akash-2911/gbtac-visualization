@@ -24,6 +24,7 @@ export default function TopBar({ pageTitle }) {
 
   return (
     <header
+      className="gbtac-topbar"
       style={{
         height: '100%',
         backgroundColor: 'var(--surface)',
@@ -36,18 +37,21 @@ export default function TopBar({ pageTitle }) {
       }}
     >
       <span
+        className="tb-left-label"
         style={{
           fontSize: '17px',
           fontWeight: 700,
           color: 'var(--text-primary)',
           letterSpacing: '0.03em',
           textTransform: 'uppercase',
+          flexShrink: 0,
         }}
       >
         GBTAC
       </span>
 
       <span
+        className="tb-title"
         style={{
           fontWeight: 700,
           fontSize: '17px',
@@ -63,15 +67,16 @@ export default function TopBar({ pageTitle }) {
         GBTAC {pageTitle} Dashboard
       </span>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+      <div className="tb-right" style={{ display: 'flex', alignItems: 'center', gap: '18px', flexShrink: 0 }}>
         <div
-  onClick={() => navigate('/settings')}
+  onClick={() => navigate('/admin')}
   onKeyDown={(e) => {
-    if (e.key === 'Enter' || e.key === ' ') navigate('/settings');
+    if (e.key === 'Enter' || e.key === ' ') navigate('/admin');
   }}
   role="button"
   tabIndex={0}
-  aria-label={`View settings for ${displayName}`}
+  aria-label={`View admin panel for ${displayName}`}
+  className="tb-profile"
   style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
 >
           <div
@@ -91,10 +96,11 @@ export default function TopBar({ pageTitle }) {
           >
             {initials}
           </div>
-          <span style={{ fontSize: '14px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+          <span className="tb-name" style={{ fontSize: '14px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
             {displayName}
           </span>
           <span
+            className="tb-badge"
             style={{
               fontSize: '11px',
               fontWeight: 600,
@@ -109,13 +115,14 @@ export default function TopBar({ pageTitle }) {
           </span>
         </div>
 
-        <span style={{ color: 'var(--border)', fontSize: '14px' }}>|</span>
+        <span className="tb-divider" style={{ color: 'var(--border)', fontSize: '14px' }}>|</span>
 
         <ThemeToggle />
 
         <button
           type="button"
           onClick={handleLogout}
+          aria-label="Log out"
           style={{
             fontSize: '14px',
             color: 'var(--status-red-text)',
@@ -125,11 +132,52 @@ export default function TopBar({ pageTitle }) {
             fontWeight: 500,
             padding: '6px 4px',
             whiteSpace: 'nowrap',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
           }}
         >
-          ↪ Logout
+          <span aria-hidden="true">↪</span>
+          <span className="tb-logout-label">Logout</span>
         </button>
       </div>
+
+      <style>{`
+        @media (max-width: 820px) {
+          .gbtac-topbar {
+            padding-left: 64px !important;
+            padding-right: 14px !important;
+          }
+          .tb-left-label {
+            display: none;
+          }
+          .tb-title {
+            position: static !important;
+            transform: none !important;
+            left: auto !important;
+            top: auto !important;
+            flex: 1;
+            min-width: 0;
+            text-align: left !important;
+            font-size: 14px !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .tb-right {
+            gap: 10px !important;
+          }
+        }
+
+        @media (max-width: 560px) {
+          .tb-name, .tb-badge, .tb-divider {
+            display: none;
+          }
+          .tb-logout-label {
+            display: none;
+          }
+        }
+      `}</style>
     </header>
   );
 }
