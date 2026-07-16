@@ -35,7 +35,7 @@ const ALLOWED_ROLES = ["Admin", "Staff", "Viewer"];  // SuperAdmin not settable 
 app.http("updateUser", {
   methods: ["PATCH"],
   authLevel: "anonymous",
-  route: "admin/users/{id}",
+  route: "dashboard/users/{id}",
   handler: async (request, context) => {
     try {
       // SuperAdmin only — matches Akash's 4-tier role model for destructive actions

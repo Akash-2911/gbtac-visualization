@@ -28,7 +28,7 @@ const sqlConfig = {
 app.http("getAdminSummary", {
   methods: ["GET"],
   authLevel: "anonymous",
-  route: "admin/summary",
+  route: "dashboard/summary", 
   handler: async (request, context) => {
     try {
       // Only Admin and SuperAdmin can view admin summary
