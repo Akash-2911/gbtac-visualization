@@ -10,7 +10,7 @@ const REPORT_MAP = {
   energyVsSolar: { reportId: 'd539932b-add1-4c6b-ad19-7e4ea08ee044', pageId: 'd9da5989d76e7e210ca3' },
   energySolarBreakdown: { reportId: 'd539932b-add1-4c6b-ad19-7e4ea08ee044', pageId: '549f57835ef0a0dd3d84' },
   solarGeneration: { reportId: '1fba11af-ee34-40e1-8eae-f82945c84f90', pageId: 'b21899854ca5981473a0' },
-  // emissions: { reportId: '<fill in once Aryan republishes with corrected CO2 logic>', pageId: '<fill in>' },
+ emissions: { reportId: '8c43f0fe-6963-4fe2-afd1-c1429ea5a76a', pageId: 'fb50e36d7fa37a453f2f' },
 };
 
 export default function PowerBIReport({ reportKey }) {
