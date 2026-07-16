@@ -29,11 +29,19 @@ export default function TopBar({ pageTitle }) {
         height: '100%',
         backgroundColor: 'var(--surface)',
         borderBottom: '1px solid var(--border)',
-        display: 'flex',
+        // FIX: was display:flex + justify-content:space-between with the title
+        // as a SEPARATE absolutely-positioned span (left:50%, translate -50%).
+        // That had zero awareness of how wide the right-side profile block was,
+        // so on an iPad-width viewport the centered title's own width pushed
+        // straight into "Akash Patel ADMIN" — that's the exact overlap in image 3.
+        // A 3-column grid (auto | 1fr | auto) centers the title the same way
+        // visually, but the middle column SHRINKS + ellipsizes instead of
+        // overlapping when space runs out.
+        display: 'grid',
+        gridTemplateColumns: 'auto 1fr auto',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        columnGap: '16px',
         padding: '0 28px',
-        position: 'relative',
       }}
     >
       <span
@@ -44,7 +52,6 @@ export default function TopBar({ pageTitle }) {
           color: 'var(--text-primary)',
           letterSpacing: '0.03em',
           textTransform: 'uppercase',
-          flexShrink: 0,
         }}
       >
         GBTAC
@@ -56,11 +63,10 @@ export default function TopBar({ pageTitle }) {
           fontWeight: 700,
           fontSize: '17px',
           color: 'var(--text-primary)',
-          position: 'absolute',
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-          pointerEvents: 'none',
+          textAlign: 'center',
+          minWidth: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
         }}
       >
@@ -69,16 +75,16 @@ export default function TopBar({ pageTitle }) {
 
       <div className="tb-right" style={{ display: 'flex', alignItems: 'center', gap: '18px', flexShrink: 0 }}>
         <div
-  onClick={() => navigate('/admin')}
-  onKeyDown={(e) => {
-    if (e.key === 'Enter' || e.key === ' ') navigate('/admin');
-  }}
-  role="button"
-  tabIndex={0}
-  aria-label={`View admin panel for ${displayName}`}
-  className="tb-profile"
-  style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
->
+          onClick={() => navigate('/admin')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') navigate('/admin');
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label={`View admin panel for ${displayName}`}
+          className="tb-profile"
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+        >
           <div
             style={{
               width: '30px',
@@ -147,22 +153,16 @@ export default function TopBar({ pageTitle }) {
           .gbtac-topbar {
             padding-left: 64px !important;
             padding-right: 14px !important;
+            /* clears the fixed mobile hamburger from Layout.jsx and the
+               iPad/iPhone floating toolbar, so nothing sits on top of this bar */
+            padding-top: env(safe-area-inset-top);
           }
           .tb-left-label {
             display: none;
           }
           .tb-title {
-            position: static !important;
-            transform: none !important;
-            left: auto !important;
-            top: auto !important;
-            flex: 1;
-            min-width: 0;
             text-align: left !important;
             font-size: 14px !important;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
           }
           .tb-right {
             gap: 10px !important;
