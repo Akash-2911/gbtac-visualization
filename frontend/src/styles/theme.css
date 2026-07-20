@@ -37,6 +37,35 @@
   --text-muted: #6E7681;
 }
 
+/* High contrast mode (item #10) — pushes text/border colors to their
+   maximum contrast against the current theme's background, and thickens
+   borders so card edges and dividers are unambiguous. */
+[data-contrast='high'] {
+  --border: #000000;
+  --text-primary: #000000;
+  --text-secondary: #000000;
+}
+[data-theme='dark'][data-contrast='high'] {
+  --border: #FFFFFF;
+  --text-primary: #FFFFFF;
+  --text-secondary: #FFFFFF;
+}
+[data-contrast='high'] * {
+  border-color: var(--border) !important;
+}
+
+/* Text size (item #10) — NOW that fontSize values across the app use rem
+   instead of px (converted in this pass), changing the root font-size here
+   scales ONLY text — padding, card widths, and layout (still in px) stay
+   fixed. This replaces the earlier `zoom` approach, which scaled everything
+   uniformly (text, spacing, cards) because that's what zoom does.
+   NOTE: pages not yet converted to rem (Overview/Energy/Solar/Weather/
+   Compare, if they still use px fontSize) will not respond to this yet. */
+html { font-size: 16px; }
+[data-font-scale='small'] { font-size: 14px; }
+[data-font-scale='medium'] { font-size: 16px; }
+[data-font-scale='large'] { font-size: 19px; }
+
 * {
   box-sizing: border-box;
 }

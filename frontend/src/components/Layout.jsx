@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import {
   LayoutGrid,
@@ -14,7 +14,9 @@ import {
   Moon,
   SunMedium,
   LogOut,
+  UploadCloud,
 } from 'lucide-react';
+import { useTheme } from '../components/ThemeContext';
 
 const navGroups = [
   {
@@ -35,7 +37,8 @@ const navGroups = [
   {
     label: 'MANAGEMENT',
     items: [
-      { path: '/admin', label: 'Admin', icon: ShieldCheck },
+      { path: '/admin', label: 'Admin', icon: ShieldCheck, end: true },
+      { path: '/admin/upload', label: 'Data Upload', icon: UploadCloud },
       { path: '/settings', label: 'Settings', icon: SettingsIcon },
     ],
   },
@@ -43,11 +46,10 @@ const navGroups = [
 
 export default function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { instance } = useMsal();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [theme, setTheme] = useState(
-    () => document.documentElement.getAttribute('data-theme') || 'light'
-  );
+  const { theme, setTheme } = useTheme();
 
   const account = instance.getActiveAccount();
   const displayName = account?.name || account?.username || 'User';
@@ -65,9 +67,7 @@ export default function Layout() {
   const closeMenu = () => setMenuOpen(false);
 
   const toggleTheme = () => {
-    const next = theme === 'light' ? 'dark' : 'light';
-    setTheme(next);
-    document.documentElement.setAttribute('data-theme', next);
+    setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
   const handleLogout = () => {
@@ -124,8 +124,8 @@ export default function Layout() {
           }}
         >
           <div>
-            <h2 style={{ fontSize: '18px', color: '#fff', margin: 0 }}>GBTAC</h2>
-            <p style={{ fontSize: '12px', color: '#8FA0BD', margin: '2px 0 0' }}>Energy Systems</p>
+            <h2 style={{ fontSize: '1.125rem', color: '#fff', margin: 0 }}>GBTAC</h2>
+            <p style={{ fontSize: '0.75rem', color: '#8FA0BD', margin: '2px 0 0' }}>Energy Systems</p>
           </div>
           <button
             type="button"
@@ -137,7 +137,7 @@ export default function Layout() {
               background: 'none',
               border: 'none',
               color: '#fff',
-              fontSize: '18px',
+              fontSize: '1.125rem',
               lineHeight: 1,
               cursor: 'pointer',
               padding: '2px 4px',
@@ -153,7 +153,7 @@ export default function Layout() {
             <div key={group.label} style={{ marginBottom: '18px' }}>
               <p
                 style={{
-                  fontSize: '10px',
+                  fontSize: '0.625rem',
                   fontWeight: 600,
                   color: '#5F7290',
                   letterSpacing: '0.08em',
@@ -181,7 +181,7 @@ export default function Layout() {
                           backgroundColor: isActive ? 'rgba(59,130,246,0.15)' : 'transparent',
                           borderLeft: isActive ? '3px solid var(--accent-blue)' : '3px solid transparent',
                           textDecoration: 'none',
-                          fontSize: '14px',
+                          fontSize: '0.875rem',
                           fontWeight: isActive ? 600 : 400,
                         })}
                       >
@@ -191,7 +191,7 @@ export default function Layout() {
                           <span
                             style={{
                               marginLeft: 'auto',
-                              fontSize: '9px',
+                              fontSize: '0.5625rem',
                               fontWeight: 700,
                               background: 'var(--accent-purple)',
                               color: '#fff',
@@ -211,7 +211,9 @@ export default function Layout() {
           ))}
         </div>
 
-        {/* Bottom section: Dark mode toggle -> profile card -> Sign out */}
+        {/* Bottom section: Dark mode toggle -> profile card -> Sign out.
+            This is the ONLY place theme is controlled — removed from
+            Settings to avoid the two-controls-one-value desync bug. */}
         <div style={{ flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '12px' }}>
           <button
             type="button"
@@ -225,7 +227,7 @@ export default function Layout() {
               background: 'none',
               border: 'none',
               color: 'var(--sidebar-text)',
-              fontSize: '14px',
+              fontSize: '0.875rem',
               cursor: 'pointer',
               textAlign: 'left',
             }}
@@ -235,12 +237,26 @@ export default function Layout() {
           </button>
 
           <div
+            role="button"
+            tabIndex={0}
+            onClick={() => {
+              navigate('/settings');
+              closeMenu();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                navigate('/settings');
+                closeMenu();
+              }
+            }}
+            aria-label="Go to your account settings"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '10px',
               padding: '10px 20px',
               marginTop: '4px',
+              cursor: 'pointer',
             }}
           >
             <div
@@ -253,7 +269,7 @@ export default function Layout() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '12px',
+                fontSize: '0.75rem',
                 fontWeight: 700,
                 flexShrink: 0,
               }}
@@ -263,7 +279,7 @@ export default function Layout() {
             <div style={{ minWidth: 0 }}>
               <p
                 style={{
-                  fontSize: '13px',
+                  fontSize: '0.8125rem',
                   fontWeight: 600,
                   color: '#fff',
                   margin: 0,
@@ -274,7 +290,7 @@ export default function Layout() {
               >
                 {displayName}
               </p>
-              <p style={{ fontSize: '11px', color: '#8FA0BD', margin: 0 }}>{role}</p>
+              <p style={{ fontSize: '0.6875rem', color: '#8FA0BD', margin: 0 }}>{role}</p>
             </div>
           </div>
 
@@ -291,7 +307,7 @@ export default function Layout() {
               background: 'none',
               border: 'none',
               color: 'var(--status-red-text)',
-              fontSize: '14px',
+              fontSize: '0.875rem',
               cursor: 'pointer',
               textAlign: 'left',
             }}
