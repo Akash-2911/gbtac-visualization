@@ -14,9 +14,9 @@ export default function PageContainer({ title, subtitle, children }) {
       }}
     >
       <div style={{ marginBottom: '16px' }}>
-        <h1 style={{ fontSize: '24px', margin: '0 0 4px' }}>{title}</h1>
+        <h1 style={{ fontSize: '1.5rem', margin: '0 0 4px' }}>{title}</h1>
         {subtitle && (
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>{subtitle}</p>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', margin: 0 }}>{subtitle}</p>
         )}
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
