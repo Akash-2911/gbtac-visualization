@@ -1,7 +1,7 @@
 import { authFetch } from './apiClient';
 
 export function fetchAdminSummary() {
-  return authFetch('/admin/summary');
+  return authFetch('/dashboardSummary');
 }
 
 export function fetchUploadHistory() {
@@ -13,11 +13,11 @@ export function deleteUpload(id) {
 }
 
 export function fetchUsers() {
-  return authFetch('/admin/users');
+  return authFetch('/dashboardUsers');
 }
 
 export function updateUser(id, changes) {
-  return authFetch(`/admin/users/${id}`, {
+  return authFetch(`/dashboard/users/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(changes),
