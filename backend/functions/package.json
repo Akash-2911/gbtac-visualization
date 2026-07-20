@@ -1,7 +1,7 @@
 {
   "name": "gbtac-functions",
   "version": "1.0.0",
-  "main": "src/functions/*.js",
+  "main": "src/functions/**/*.js",
   "scripts": {
     "start": "func start"
   },
