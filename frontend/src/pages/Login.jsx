@@ -47,7 +47,7 @@ export default function Login() {
           style={{
             width: '100%',
             padding: '12px',
-            marginBottom: '12px',
+            marginBottom: '20px',
             border: '1px solid var(--border)',
             borderRadius: '8px',
             backgroundColor: '#fff',
@@ -58,30 +58,12 @@ export default function Login() {
           Sign in with Microsoft
         </button>
 
-        <button
-          disabled
-          title="Not available — this app uses Microsoft Entra ID only"
-          style={{
-            width: '100%',
-            padding: '12px',
-            marginBottom: '20px',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            backgroundColor: '#f5f5f5',
-            fontSize: '14px',
-            color: 'var(--text-muted)',
-            cursor: 'not-allowed',
-          }}
-        >
-          Sign in with Google
-        </button>
-
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontStyle: 'italic', marginBottom: '20px' }}>
           For GBTAC staff and authorized users only
         </p>
         <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '0 0 16px' }} />
         <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-          By signing in you agree to SAIT's acceptable use policy.
+          By signing in you agree to GBTAC's acceptable use policy.
         </p>
       </div>
     </div>

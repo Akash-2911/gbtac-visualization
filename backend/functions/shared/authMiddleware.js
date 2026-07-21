@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const jwksClient = require("jwks-rsa");
+const { getPool, sql } = require("./sqlClient");
 
 const tenantId = process.env.AUTH_TENANT_ID;
 const clientId = process.env.AUTH_CLIENT_ID;
@@ -56,15 +57,66 @@ function verifyToken(token) {
   });
 }
 
+// Looks up (or creates) the user's row in our own database. This is the
+// "floor directory" step, separate from Entra ID (the "front door guard"
+// above). Entra only proves who someone is, this decides what they're
+// allowed to do inside GBTAC specifically.
+async function getOrCreateDbUser(decodedToken) {
+  const entraOid = decodedToken.oid || decodedToken.sub;
+  const pool = await getPool();
+
+  const existing = await pool.request()
+    .input("entraOid", sql.NVarChar, entraOid)
+    .query(`
+      SELECT user_id, display_name, email, role, active, status, can_upload
+      FROM users WHERE entra_oid = @entraOid
+    `);
+
+  if (existing.recordset.length > 0) {
+    return existing.recordset[0];
+  }
+
+  // First time we've seen this person, create their row as pending.
+  // No real role yet, SuperAdmin assigns one on approval.
+  const displayName = decodedToken.name || "Unknown";
+  const email = decodedToken.preferred_username || "unknown@unknown.com";
+
+  await pool.request()
+    .input("displayName", sql.NVarChar, displayName)
+    .input("email", sql.NVarChar, email)
+    .input("entraOid", sql.NVarChar, entraOid)
+    .query(`
+      INSERT INTO users (display_name, email, role, active, status, can_upload, entra_oid)
+      VALUES (@displayName, @email, 'Viewer', 0, 'pending', 0, @entraOid)
+    `);
+
+  const created = await pool.request()
+    .input("entraOid", sql.NVarChar, entraOid)
+    .query(`
+      SELECT user_id, display_name, email, role, active, status, can_upload
+      FROM users WHERE entra_oid = @entraOid
+    `);
+
+  return created.recordset[0];
+}
+
 /**
- * Checks that a request has a valid JWT and (optionally) an allowed role.
+ * Checks that a request has a valid JWT (Entra ID, proves identity) AND
+ * that the person has an approved, active row in our database (proves
+ * app-specific permission). Two separate checks, two separate systems.
+ *
  * Usage inside a function handler:
  *
  *   const { checkAuth } = require("../../shared/authMiddleware");
  *   const user = await checkAuth(request, ["Admin", "SuperAdmin"]);
  *
- * Throws an Error with a `.status` property (401 or 403) if the check fails.
- * Returns the decoded user object (including `.roles`) if it passes.
+ * Throws an Error with a `.status` property if the check fails:
+ *   401 - missing/invalid token (Entra ID check failed)
+ *   428 - valid token, but account is pending SuperAdmin approval
+ *   403 - valid token, approved, but wrong role for this action
+ *
+ * Returns the merged user object (token claims + database row, including
+ * `.role`, `.status`, `.can_upload`, `.user_id`) if everything passes.
  */
 async function checkAuth(request, allowedRoles = null) {
   const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
@@ -86,20 +138,36 @@ async function checkAuth(request, allowedRoles = null) {
     throw err;
   }
 
-  const userRoles = decoded.roles || [];
+  // Entra ID confirmed identity. Now check our own database for
+  // app-specific approval and role.
+  const dbUser = await getOrCreateDbUser(decoded);
 
+  if (dbUser.status === "pending") {
+    const err = new Error("Your account is pending SuperAdmin approval.");
+    err.status = 428; // distinct code so the frontend can show a wait screen, not a generic error
+    throw err;
+  }
+
+  if (!dbUser.active) {
+    const err = new Error("Your account has been deactivated.");
+    err.status = 403;
+    throw err;
+  }
+
+  // Role check now uses the DATABASE role, not the JWT token's role claim.
+  // This is what makes SuperAdmin's in-app role changes actually take effect.
   if (allowedRoles && allowedRoles.length > 0) {
-    const hasAllowedRole = userRoles.some((role) => allowedRoles.includes(role));
-    if (!hasAllowedRole) {
+    if (!allowedRoles.includes(dbUser.role)) {
       const err = new Error(
-        `Forbidden: requires one of [${allowedRoles.join(", ")}], user has [${userRoles.join(", ")}]`
+        `Forbidden: requires one of [${allowedRoles.join(", ")}], user has [${dbUser.role}]`
       );
       err.status = 403;
       throw err;
     }
   }
 
-  return decoded;
+  // Merge token claims with the DB row so handlers have access to both
+  return { ...decoded, ...dbUser };
 }
 
 module.exports = { checkAuth };
