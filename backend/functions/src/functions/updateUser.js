@@ -3,20 +3,24 @@
  * Sprint 4 — Ticket 7: Build Admin Dashboard UI (Backend)
  * File:    updateUser.js
  * Author:  Aryan
+ * Update : Akash on july 20, 2026
  *
- * PATCH /admin/users/{id}
- * Updates a user's role or active status.
- * Restricted to SuperAdmin only — destructive action per 4-tier role model.
+ * PATCH /dashboard/users/{id}
+ * Updates a user's role, active status, approval status, or upload permission.
+ * Restricted to SuperAdmin only — destructive/permission action per 4-tier role model.
  *
  * Request body (JSON — send only fields you want to change):
- *   { "role": "Admin" }                    — change role
- *   { "active": false }                    — deactivate user
- *   { "role": "Viewer", "active": true }   — change role and reactivate
+ *   { "role": "Admin" }                          — change role
+ *   { "active": false }                          — deactivate user
+ *   { "status": "active" }                       — approve a pending user
+ *   { "can_upload": true }                       — grant upload permission (Admin role only)
+ *   { "role": "Staff", "status": "active" }      — approve + assign role in one call
  *
  * Rules:
  *   - SuperAdmin cannot demote or deactivate themselves
  *   - Role must be one of: SuperAdmin, Admin, Staff, Viewer
  *   - Cannot set role to SuperAdmin via API (must be done directly in DB by Akash)
+ *   - status must be one of: pending, active
  */
 
 const { app } = require("@azure/functions");
@@ -31,6 +35,7 @@ const sqlConfig = {
 };
 
 const ALLOWED_ROLES = ["Admin", "Staff", "Viewer"];  // SuperAdmin not settable via API
+const ALLOWED_STATUSES = ["pending", "active"];
 
 app.http("updateUser", {
   methods: ["PATCH"],
@@ -61,13 +66,13 @@ app.http("updateUser", {
         };
       }
 
-      const { role, active } = body;
+      const { role, active, status, can_upload } = body;
 
       // Must provide at least one field to update
-      if (role === undefined && active === undefined) {
+      if (role === undefined && active === undefined && status === undefined && can_upload === undefined) {
         return {
           status: 400,
-          jsonBody: { error: "Must provide at least one field to update: 'role' or 'active'." },
+          jsonBody: { error: "Must provide at least one field to update: 'role', 'active', 'status', or 'can_upload'." },
         };
       }
 
@@ -82,13 +87,21 @@ app.http("updateUser", {
         };
       }
 
+      // Validate status value if provided
+      if (status !== undefined && !ALLOWED_STATUSES.includes(status)) {
+        return {
+          status: 400,
+          jsonBody: { error: `Invalid status '${status}'. Must be one of: ${ALLOWED_STATUSES.join(", ")}.` },
+        };
+      }
+
       const pool = await sql.connect(sqlConfig);
 
       // Confirm target user exists
       const checkResult = await pool.request()
         .input("userId", sql.Int, targetUserId)
         .query(`
-          SELECT user_id, display_name, email, role, active, entra_oid
+          SELECT user_id, display_name, email, role, active, status, entra_oid
           FROM users WHERE user_id = @userId
         `);
 
@@ -124,6 +137,16 @@ app.http("updateUser", {
         setClauses.push("active = @active");
       }
 
+      if (status !== undefined) {
+        updateReq.input("status", sql.NVarChar, status);
+        setClauses.push("status = @status");
+      }
+
+      if (can_upload !== undefined) {
+        updateReq.input("canUpload", sql.Bit, can_upload ? 1 : 0);
+        setClauses.push("can_upload = @canUpload");
+      }
+
       await updateReq.query(`
         UPDATE users
         SET ${setClauses.join(", ")}
@@ -133,14 +156,14 @@ app.http("updateUser", {
       // Log the change to Application Insights
       context.log(
         `SuperAdmin ${caller.preferred_username || callerOid} updated user ${targetUserId} ` +
-        `(${targetUser.email}): ${JSON.stringify({ role, active })}`
+        `(${targetUser.email}): ${JSON.stringify({ role, active, status, can_upload })}`
       );
 
       // Return updated user record
       const updated = await pool.request()
         .input("userId", sql.Int, targetUserId)
         .query(`
-          SELECT user_id, display_name, email, role, active, last_login, created_at
+          SELECT user_id, display_name, email, role, active, status, can_upload, last_login, created_at
           FROM users WHERE user_id = @userId
         `);
 
@@ -149,7 +172,7 @@ app.http("updateUser", {
         jsonBody: {
           message: `User ${targetUser.display_name} updated successfully.`,
           user:    updated.recordset[0],
-          changes: { role, active },
+          changes: { role, active, status, can_upload },
           updatedBy: caller.preferred_username || callerOid,
         },
       };
