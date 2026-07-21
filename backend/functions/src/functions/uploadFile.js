@@ -9,8 +9,18 @@ app.http("uploadFile", {
   route: "upload",
   handler: async (request, context) => {
     try {
-      // Step 1: verify caller is authenticated and has permission to upload
-   const user = await checkAuth(request, ["Admin", "SuperAdmin"]);
+// Step 1: verify caller is authenticated and has permission to upload
+      const user = await checkAuth(request, ["Admin", "SuperAdmin"]);
+
+      // SuperAdmin can always upload. Admin can only upload if their
+      // can_upload flag is set by a SuperAdmin, this is the actual
+      // enforcement of Maeric's per-admin upload permission request,
+      // not just a UI toggle.
+      if (user.role === "Admin" && !user.can_upload) {
+        const err = new Error("You do not have upload permission. Contact a SuperAdmin.");
+        err.status = 403;
+        throw err;
+      }
 
       // Step 2: read the uploaded file from the request
       const formData = await request.formData();

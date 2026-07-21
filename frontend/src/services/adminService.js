@@ -17,7 +17,19 @@ export function fetchAdminSummary() {
 }
 
 export function fetchUploadHistory() {
-  return authFetch('/uploads/history');
+  return authFetch('/uploads/history').then((data) => {
+    const rows = data?.data || data?.uploads || data || [];
+    return rows.map((row) => ({
+      id: row.batch_id,
+      filename: row.file_name,
+      dataType: row.data_type,
+      uploadedBy: row.uploaded_by_name,
+      date: row.uploaded_at,
+      rows: row.row_count,
+      status: row.status,
+      errorMessage: row.error_message,
+    }));
+  });
 }
 
 export function deleteUpload(id) {
@@ -44,7 +56,6 @@ export function fetchUsers() {
   });
 }
 
-// Only pending users, for the collapsible approval section
 export function fetchPendingUsers() {
   return authFetch('/dashboardUsers?status=pending').then((data) => {
     const rows = data?.data || data?.users || data || [];
@@ -60,8 +71,25 @@ export function updateUser(id, changes) {
   });
 }
 
-// Convenience wrapper: approve a pending user in one call, sets status
-// active and assigns their role at the same time.
 export function approveUser(id, role) {
   return updateUser(id, { status: 'active', role });
+}
+
+// New: actual file upload, multipart form data, no Content-Type header
+// (the browser sets the multipart boundary automatically).
+export function uploadFile(file, dataType) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('dataType', dataType);
+  return authFetch('/upload', {
+    method: 'POST',
+    body: formData,
+  });
+}
+
+// New: identity check, includes role and canUpload from the database,
+// used by pages that need to know upload permission specifically,
+// not just role (e.g. Upload.jsx).
+export function fetchMe() {
+  return authFetch('/me');
 }
