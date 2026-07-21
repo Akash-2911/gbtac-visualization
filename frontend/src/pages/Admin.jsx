@@ -334,9 +334,18 @@ export default function Admin() {
                           {u.canUpload ? 'Allowed' : 'Blocked'}
                         </button>
                       ) : (
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          {u.role === 'SuperAdmin' ? '—' : u.canUpload ? 'Allowed' : 'Blocked'}
-                        </span>
+                        <span
+  style={{
+    background: 'var(--status-green-bg)',
+    color: 'var(--status-green-text)',
+    borderRadius: '4px',
+    padding: '4px 10px',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+  }}
+>
+  {u.role === 'SuperAdmin' ? 'Allowed' : u.canUpload ? 'Allowed' : 'Blocked'}
+</span>
                       )}
                     </td>
                     <td style={{ padding: '10px 8px' }}>{u.lastLogin ?? '—'}</td>

@@ -2,7 +2,8 @@ import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { UploadCloud, CheckCircle2, RotateCw, AlertCircle, Clock, AlertTriangle, Trash2, Lock } from 'lucide-react';
 import PageContainer from '../components/PageContainer';
 import Toast from '../components/Toast';
-import { fetchUploadHistory, deleteUpload } from '../services/adminService';
+import { fetchUploadHistory, deleteUpload, uploadFile, fetchMe } from '../services/adminService';
+
 // NOTE: uploadFile does not exist in adminService.js yet — needs a simple
 // fetch wrapper added (multipart/form-data POST), plus a matching backend
 // route (e.g. POST /uploads). Same gap flagged in Admin.jsx previously.
@@ -19,12 +20,22 @@ const DATA_TYPES = ['Greenhouse', 'Solar', 'Weather'];
 const STATUSES = ['complete', 'processing', 'pending', 'failed'];
 
 export default function Upload() {
+  const [me, setMe] = useState(null);
+  useEffect(() => {
+    fetchMe().then(setMe).catch(() => setMe(null));
+  }, []);
+
+  const canUploadFiles = me?.role === 'SuperAdmin' || (me?.role === 'Admin' && me?.canUpload);
   // NOTE: same hardcoded stopgap as Layout.jsx / Admin.jsx / Settings.jsx —
   // needs to come from the DB/JWT instead. Since it's 'Admin' not
   // 'SuperAdmin', both the upload zone and Delete action below will be
   // HIDDEN for everyone until real role data replaces this.
-  const role = 'Admin';
-  const isSuperAdmin = role === 'SuperAdmin';
+  const [me, setMe] = useState(null);
+useEffect(() => {
+  fetchMe().then(setMe).catch(() => setMe(null));
+}, []);
+
+const canUploadFiles = me?.role === 'SuperAdmin' || (me?.role === 'Admin' && me?.canUpload);
 
   const [uploads, setUploads] = useState([]);
   const [error, setError] = useState(null);
@@ -71,13 +82,13 @@ export default function Upload() {
     // TODO: wire up once uploadFile exists in adminService.js + backend
     console.error('uploadFile endpoint not implemented yet — see adminService.js TODO');
     alert(`This feature isn't available yet — "${file.name}" was not uploaded.`);
-    // try {
-    //   await uploadFile(file, dataType);
-    //   showToast(`"${file.name}" uploaded`);
-    //   load();
-    // } catch (e) {
-    //   alert(`Could not upload: ${e.message}`);
-    // }
+    try {
+  await uploadFile(file, dataType);
+  showToast(`"${file.name}" uploaded`);
+  load();
+} catch (e) {
+  alert(`Could not upload: ${e.message}`);
+}
   };
 
   const handleInputChange = (e) => {
@@ -480,35 +491,14 @@ export default function Upload() {
                         NOTE: assumes the backend returns `row.missingColumns`
                         (array of strings) on failed rows — confirm the real
                         field name with Aryan and adjust if different. */}
-                    {isFailed && row.missingColumns?.length > 0 && (
+                    {isFailed && row.errorMessage && (
                       <tr style={{ borderLeft: '3px solid var(--status-red-text)', borderBottom: '1px solid var(--border)' }}>
-                        <td colSpan={isSuperAdmin ? 7 : 6} style={{ padding: '4px 8px 16px 8px' }}>
+                        <td colSpan={canUploadFiles ? 7 : 6} style={{ padding: '4px 8px 16px 8px' }}>
                           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                             <AlertTriangle size={14} style={{ color: 'var(--status-red-text)', flexShrink: 0, marginTop: '2px' }} />
-                            <div>
-                              <p style={{ fontSize: '0.8125rem', color: 'var(--status-red-text)', margin: '0 0 6px' }}>
-                                Schema validation failed — missing expected columns:
-                              </p>
-                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
-                                {row.missingColumns.map((col) => (
-                                  <code
-                                    key={col}
-                                    style={{
-                                      background: 'var(--bg)',
-                                      border: '1px solid var(--border)',
-                                      borderRadius: '4px',
-                                      padding: '2px 6px',
-                                      fontSize: '0.75rem',
-                                    }}
-                                  >
-                                    {col}
-                                  </code>
-                                ))}
-                              </div>
-                              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>
-                                Fix the file and re-upload.
-                              </p>
-                            </div>
+                            <p style={{ fontSize: '0.8125rem', color: 'var(--status-red-text)', margin: 0 }}>
+                              {row.errorMessage}
+                            </p>
                           </div>
                         </td>
                       </tr>
