@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useUser } from '../auth/UserContext';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import {
@@ -18,31 +19,50 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../components/ThemeContext';
 
-const navGroups = [
-  {
-    label: 'DASHBOARDS',
-    items: [
-      { path: '/', label: 'Overview', icon: LayoutGrid, end: true },
-      { path: '/energy', label: 'Energy', icon: Zap },
-      { path: '/solar', label: 'Solar', icon: Sun },
-      { path: '/emissions', label: 'Emissions', icon: Leaf },
-      { path: '/weather', label: 'Weather', icon: CloudRain },
-      { path: '/compare', label: 'Compare', icon: ArrowLeftRight },
-    ],
-  },
-  {
-    label: 'ADVANCED',
-    items: [{ path: '/ai-assistant', label: 'AI Assistant', icon: Sparkles, beta: true }],
-  },
-  {
-    label: 'MANAGEMENT',
-    items: [
-      { path: '/admin', label: 'Admin', icon: ShieldCheck, end: true },
-      { path: '/admin/upload', label: 'Data Upload', icon: UploadCloud },
-      { path: '/settings', label: 'Settings', icon: SettingsIcon },
-    ],
-  },
-];
+// Each item can declare allowedRoles; omitted means visible to everyone
+// signed in. Filtered per-render based on the real database role.
+function getNavGroups(role) {
+  const groups = [
+    {
+      label: 'DASHBOARDS',
+      items: [
+        { path: '/', label: 'Overview', icon: LayoutGrid, end: true },
+        { path: '/energy', label: 'Energy', icon: Zap },
+        { path: '/solar', label: 'Solar', icon: Sun },
+        { path: '/emissions', label: 'Emissions', icon: Leaf },
+        { path: '/weather', label: 'Weather', icon: CloudRain },
+        { path: '/compare', label: 'Compare', icon: ArrowLeftRight },
+      ],
+    },
+    {
+      label: 'ADVANCED',
+      items: [
+        {
+          path: '/ai-assistant',
+          label: 'AI Assistant',
+          icon: Sparkles,
+          beta: true,
+          allowedRoles: ['Staff', 'Admin', 'SuperAdmin'],
+        },
+      ],
+    },
+    {
+      label: 'MANAGEMENT',
+      items: [
+        { path: '/admin', label: 'Admin', icon: ShieldCheck, end: true, allowedRoles: ['Admin', 'SuperAdmin'] },
+        { path: '/admin/upload', label: 'Data Upload', icon: UploadCloud, allowedRoles: ['Admin', 'SuperAdmin'] },
+        { path: '/settings', label: 'Settings', icon: SettingsIcon },
+      ],
+    },
+  ];
+
+  return groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => !item.allowedRoles || item.allowedRoles.includes(role)),
+    }))
+    .filter((group) => group.items.length > 0);
+}
 
 export default function Layout() {
   const location = useLocation();
@@ -60,18 +80,12 @@ export default function Layout() {
     .slice(0, 2)
     .toUpperCase();
 
-// Real role read from the signed-in account's token claims instead of
-// the old hardcoded 'Admin' stopgap (item #4). Same pattern as
-// Admin.jsx and Settings.jsx so all three places always agree.
+// Real role read from the database via /me (shared UserContext), not
+  // the JWT token, since SuperAdmin approval only updates the database.
+  const { user } = useUser();
+  const role = user?.role || 'Viewer';
 
-  const roles = account?.idTokenClaims?.roles || [];
-  const role = roles.includes('SuperAdmin')
-    ? 'SuperAdmin'
-    : roles.includes('Admin')
-    ? 'Admin'
-    : roles.includes('Staff')
-    ? 'Staff'
-    : 'Viewer';
+  const navGroups = getNavGroups(role);
 
   const closeMenu = () => setMenuOpen(false);
 

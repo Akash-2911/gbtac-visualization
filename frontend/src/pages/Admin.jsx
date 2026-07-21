@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useUser } from '../auth/UserContext';
 import { Users, ChevronDown, ChevronUp, UserCheck } from 'lucide-react';
 import PageContainer from '../components/PageContainer';
 import Toast from '../components/Toast';
@@ -32,17 +33,10 @@ export default function Admin() {
   const { instance } = useMsal();
   const account = instance.getActiveAccount();
 
-  // Real role read from the signed-in account's token claims instead of
-  // the old hardcoded 'Admin' stopgap (item #4). Same pattern as
-  // Settings.jsx and Layout.jsx so all three places always agree.
-  const roles = account?.idTokenClaims?.roles || [];
-  const role = roles.includes('SuperAdmin')
-    ? 'SuperAdmin'
-    : roles.includes('Admin')
-    ? 'Admin'
-    : roles.includes('Staff')
-    ? 'Staff'
-    : 'Viewer';
+  // Real role read from the database via /me (shared UserContext), not
+  // the JWT token, since SuperAdmin approval only updates the database.
+  const { user } = useUser();
+  const role = user?.role || 'Viewer';
   const currentUserEmail = account?.username || account?.idTokenClaims?.preferred_username;
 
   const canEditRoles = role === 'SuperAdmin';
@@ -379,7 +373,7 @@ export default function Admin() {
         <h3 style={{ fontSize: '0.9375rem', marginBottom: '16px' }}>Organization</h3>
         <div style={{ ...rowStyle, borderBottom: 'none' }}>
           <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Workspace</span>
-          <span style={{ fontSize: '0.875rem' }}>GBTAC — Black Diamond Project</span>
+          <span style={{ fontSize: '0.875rem' }}>GBTAC — Sprung Greenhouse Project</span>
         </div>
       </div>
 
