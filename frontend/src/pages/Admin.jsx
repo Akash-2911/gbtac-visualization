@@ -3,6 +3,7 @@ import { Users } from 'lucide-react';
 import PageContainer from '../components/PageContainer';
 import Toast from '../components/Toast';
 import { fetchAdminSummary, fetchUsers, updateUser } from '../services/adminService';
+import { msalInstance } from '../auth/msalInstance';
 
 // Loading skeleton for the KPI cards, shown while summary is still null
 // instead of a bare "—" (feedback item: "Quick Stats Placeholder").
@@ -22,9 +23,18 @@ function KpiSkeleton() {
 }
 
 export default function Admin() {
-  // NOTE: same hardcoded stopgap as Layout.jsx / Settings.jsx (item #4) —
-  // needs to come from the DB/JWT instead.
-  const role = 'Admin';
+  // Pull real role and email from the signed-in account's token claims
+  // instead of the old hardcoded 'Admin' stopgap (item #4).
+  const account = msalInstance.getActiveAccount();
+  const currentUserRoles = account?.idTokenClaims?.roles || [];
+  const role = currentUserRoles.includes('SuperAdmin')
+    ? 'SuperAdmin'
+    : currentUserRoles.includes('Admin')
+    ? 'Admin'
+    : 'Staff';
+  const currentUserEmail = account?.username || account?.idTokenClaims?.preferred_username;
+
+  const canEditRoles = role === 'SuperAdmin';
 
   const [summary, setSummary] = useState(null);
   const [users, setUsers] = useState([]);
@@ -128,42 +138,59 @@ export default function Admin() {
                   </td>
                 </tr>
               )}
-              {users.map((u) => (
-                <tr key={u.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '10px 8px' }}>{u.displayName}</td>
-                  <td style={{ padding: '10px 8px' }}>{u.email}</td>
-                  <td style={{ padding: '10px 8px' }}>
-                    <select
-                      value={u.role}
-                      onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                      style={{ padding: '4px 6px', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.75rem' }}
-                    >
-                      <option>Viewer</option>
-                      <option>Staff</option>
-                      <option>Admin</option>
-                      <option>SuperAdmin</option>
-                    </select>
-                  </td>
-                  <td style={{ padding: '10px 8px' }}>{u.lastLogin ?? '—'}</td>
-                  <td style={{ padding: '10px 8px' }}>
-                    <button
-                      onClick={() => handleToggleActive(u.id, u.active)}
-                      style={{
-                        background: u.active ? 'var(--status-green-bg)' : 'var(--status-red-bg)',
-                        color: u.active ? 'var(--status-green-text)' : 'var(--status-red-text)',
-                        border: 'none',
-                        borderRadius: '4px',
-                        padding: '4px 10px',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {u.active ? 'Active' : 'Inactive'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {users.map((u) => {
+                // "You" tag + role-edit lockdown: nobody edits their own role,
+                // and only SuperAdmin can edit anyone's role (matches backend
+                // updateUser.js which enforces the same two rules server-side).
+                const isSelf = u.email === currentUserEmail;
+                return (
+                  <tr key={u.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '10px 8px' }}>
+                      {u.displayName}
+                      {isSelf && (
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginLeft: '6px' }}>
+                          (you)
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: '10px 8px' }}>{u.email}</td>
+                    <td style={{ padding: '10px 8px' }}>
+                      {canEditRoles && !isSelf ? (
+                        <select
+                          value={u.role}
+                          onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                          style={{ padding: '4px 6px', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.75rem' }}
+                        >
+                          <option>Viewer</option>
+                          <option>Staff</option>
+                          <option>Admin</option>
+                          <option>SuperAdmin</option>
+                        </select>
+                      ) : (
+                        <span>{u.role}</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '10px 8px' }}>{u.lastLogin ?? '—'}</td>
+                    <td style={{ padding: '10px 8px' }}>
+                      <button
+                        onClick={() => handleToggleActive(u.id, u.active)}
+                        style={{
+                          background: u.active ? 'var(--status-green-bg)' : 'var(--status-red-bg)',
+                          color: u.active ? 'var(--status-green-text)' : 'var(--status-red-text)',
+                          border: 'none',
+                          borderRadius: '4px',
+                          padding: '4px 10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {u.active ? 'Active' : 'Inactive'}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
