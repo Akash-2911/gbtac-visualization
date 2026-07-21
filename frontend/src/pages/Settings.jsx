@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useUser } from '../auth/UserContext';
 import { useMsal } from '@azure/msal-react';
 import PageContainer from '../components/PageContainer';
 import Toggle from '../components/Toggle';
@@ -17,17 +18,10 @@ export default function Settings() {
   const displayName = account?.name || account?.username || 'User';
   const email = account?.username || '—';
 
-  // Real role read from the signed-in account's token claims instead of
-  // the old hardcoded 'Admin' stopgap (item #4). Kept identical logic to
-  // Admin.jsx so both places always agree on the current user's role.
-  const roles = account?.idTokenClaims?.roles || [];
-  const role = roles.includes('SuperAdmin')
-    ? 'SuperAdmin'
-    : roles.includes('Admin')
-    ? 'Admin'
-    : roles.includes('Staff')
-    ? 'Staff'
-    : 'Viewer';
+// Real role read from the database via /me (shared UserContext), not
+  // the JWT token, since SuperAdmin approval only updates the database.
+  const { user } = useUser();
+  const role = user?.role || 'Viewer';
 
   const [emailAlerts, setEmailAlerts] = useState(false);
 
