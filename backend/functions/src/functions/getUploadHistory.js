@@ -34,7 +34,7 @@ const sqlConfig = {
 app.http("getUploadHistory", {
   methods: ["GET"],
   authLevel: "anonymous", // access control handled by checkAuth below
-  route: "uploads/history",
+  route: "uploadHistory",
   handler: async (request, context) => {
     try {
       // Step 1: verify caller is Admin or SuperAdmin
