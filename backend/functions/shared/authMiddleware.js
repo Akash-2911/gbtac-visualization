@@ -63,8 +63,11 @@ function verifyToken(token) {
 // allowed to do inside GBTAC specifically.
 async function getOrCreateDbUser(decodedToken) {
   const entraOid = decodedToken.oid || decodedToken.sub;
+  const email = decodedToken.preferred_username || "unknown@unknown.com";
   const pool = await getPool();
 
+  // First try matching by entra_oid (normal case for anyone who signed
+  // in through this system since day one).
   const existing = await pool.request()
     .input("entraOid", sql.NVarChar, entraOid)
     .query(`
@@ -76,10 +79,28 @@ async function getOrCreateDbUser(decodedToken) {
     return existing.recordset[0];
   }
 
-  // First time we've seen this person, create their row as pending.
-  // No real role yet, SuperAdmin assigns one on approval.
+  // Fallback: a row might already exist for this email (created manually
+  // before entra_oid was tracked, e.g. Aryan's original row). If so,
+  // backfill their real entra_oid instead of trying to insert a
+  // duplicate, which would violate the email unique constraint.
+  const byEmail = await pool.request()
+    .input("email", sql.NVarChar, email)
+    .query(`
+      SELECT user_id, display_name, email, role, active, status, can_upload
+      FROM users WHERE email = @email
+    `);
+
+  if (byEmail.recordset.length > 0) {
+    await pool.request()
+      .input("userId", sql.Int, byEmail.recordset[0].user_id)
+      .input("entraOid", sql.NVarChar, entraOid)
+      .query(`UPDATE users SET entra_oid = @entraOid WHERE user_id = @userId`);
+
+    return byEmail.recordset[0];
+  }
+
+  // Genuinely new user, no row by oid or email, create as pending.
   const displayName = decodedToken.name || "Unknown";
-  const email = decodedToken.preferred_username || "unknown@unknown.com";
 
   await pool.request()
     .input("displayName", sql.NVarChar, displayName)
