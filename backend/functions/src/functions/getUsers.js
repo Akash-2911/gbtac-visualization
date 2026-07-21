@@ -3,14 +3,16 @@
  * Sprint 4 — Ticket 7: Build Admin Dashboard UI (Backend)
  * File:    getUsers.js
  * Author:  Aryan
+ * Update : Akash on july 20, 2026
  *
- * GET /admin/users
+ * GET /dashboard/users
  * Returns full user list for the admin panel user management table.
  * Includes display name, email, role, active status, last login.
  *
  * Query params:
  *   ?role=Admin      — filter by role (optional)
  *   ?active=true     — filter by active status (optional)
+ *   ?status=pending  — filter by approval status (optional)
  *
  * Restricted to Admin and SuperAdmin only.
  */
@@ -38,6 +40,7 @@ app.http("getUsers", {
       // Parse optional filters
       const roleFilter   = request.query.get("role")   || null;
       const activeFilter = request.query.get("active") || null;
+      const statusFilter = request.query.get("status") || null;
 
       const pool = await sql.connect(sqlConfig);
       const req  = pool.request();
@@ -53,6 +56,10 @@ app.http("getUsers", {
         req.input("active", sql.Bit, isActive);
         where += " AND active = @active";
       }
+      if (statusFilter) {
+        req.input("status", sql.NVarChar, statusFilter);
+        where += " AND status = @status";
+      }
 
       const result = await req.query(`
         SELECT
@@ -61,6 +68,8 @@ app.http("getUsers", {
           email,
           role,
           active,
+          status,
+          can_upload,
           last_login,
           created_at
         FROM users

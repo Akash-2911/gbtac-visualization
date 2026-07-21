@@ -2,8 +2,6 @@ import { authFetch } from './apiClient';
 
 export function fetchAdminSummary() {
   return authFetch('/dashboardSummary').then((data) => {
-    // Backend returns snake_case fields grouped differently than the UI expects,
-    // reshape here so Admin.jsx can stay simple.
     const greenhouse = data.uploadSummary?.find((u) => u.data_type === 'greenhouse');
     const solar = data.uploadSummary?.find((u) => u.data_type === 'solar');
     const weather = data.uploadSummary?.find((u) => u.data_type === 'weather');
@@ -26,19 +24,31 @@ export function deleteUpload(id) {
   return authFetch(`/upload/${id}`, { method: 'DELETE' });
 }
 
+function mapUser(u) {
+  return {
+    id: u.user_id,
+    displayName: u.display_name,
+    email: u.email,
+    role: u.role,
+    active: u.active,
+    status: u.status,
+    canUpload: !!u.can_upload,
+    lastLogin: u.last_login,
+  };
+}
+
 export function fetchUsers() {
   return authFetch('/dashboardUsers').then((data) => {
-    // Backend returns { data: [...] } with snake_case fields, map to
-    // camelCase so the table doesn't need to know about the DB schema.
     const rows = data?.data || data?.users || data || [];
-    return rows.map((u) => ({
-      id: u.user_id,
-      displayName: u.display_name,
-      email: u.email,
-      role: u.role,
-      active: u.active,
-      lastLogin: u.last_login,
-    }));
+    return rows.map(mapUser);
+  });
+}
+
+// Only pending users, for the collapsible approval section
+export function fetchPendingUsers() {
+  return authFetch('/dashboardUsers?status=pending').then((data) => {
+    const rows = data?.data || data?.users || data || [];
+    return rows.map(mapUser);
   });
 }
 
@@ -48,4 +58,10 @@ export function updateUser(id, changes) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(changes),
   });
+}
+
+// Convenience wrapper: approve a pending user in one call, sets status
+// active and assigns their role at the same time.
+export function approveUser(id, role) {
+  return updateUser(id, { status: 'active', role });
 }

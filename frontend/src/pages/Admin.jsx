@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users } from 'lucide-react';
+import { Users, ChevronDown, ChevronUp, UserCheck } from 'lucide-react';
 import PageContainer from '../components/PageContainer';
 import Toast from '../components/Toast';
-import { fetchAdminSummary, fetchUsers, updateUser } from '../services/adminService';
 import { useMsal } from '@azure/msal-react';
+import {
+  fetchAdminSummary,
+  fetchUsers,
+  fetchPendingUsers,
+  updateUser,
+  approveUser,
+} from '../services/adminService';
 
 // Loading skeleton for the KPI cards, shown while summary is still null
 // instead of a bare "—" (feedback item: "Quick Stats Placeholder").
@@ -27,8 +33,8 @@ export default function Admin() {
   const account = instance.getActiveAccount();
 
   // Real role read from the signed-in account's token claims instead of
-  // the old hardcoded 'Admin' stopgap (item #4). Same pattern as Settings.jsx
-  // so both places always agree on the current user's role.
+  // the old hardcoded 'Admin' stopgap (item #4). Same pattern as
+  // Settings.jsx and Layout.jsx so all three places always agree.
   const roles = account?.idTokenClaims?.roles || [];
   const role = roles.includes('SuperAdmin')
     ? 'SuperAdmin'
@@ -43,6 +49,9 @@ export default function Admin() {
 
   const [summary, setSummary] = useState(null);
   const [users, setUsers] = useState([]);
+  const [pendingUsers, setPendingUsers] = useState([]);
+  const [pendingRoleChoice, setPendingRoleChoice] = useState({}); // { userId: 'Staff' }
+  const [pendingOpen, setPendingOpen] = useState(true); // collapsible, open by default
   const [error, setError] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
   const showToast = (message) => setToastMessage(message);
@@ -52,7 +61,12 @@ export default function Admin() {
     fetchUsers()
       .then((data) => setUsers(Array.isArray(data) ? data : data?.users || data?.data || []))
       .catch((e) => setError(e.message));
-  }, []);
+    if (canEditRoles) {
+      fetchPendingUsers()
+        .then((data) => setPendingUsers(Array.isArray(data) ? data : []))
+        .catch((e) => setError(e.message));
+    }
+  }, [canEditRoles]);
 
   useEffect(() => {
     load();
@@ -75,6 +89,27 @@ export default function Admin() {
       load();
     } catch (e) {
       alert(`Could not update status: ${e.message}`);
+    }
+  };
+
+  const handleToggleUpload = async (userId, currentlyCanUpload) => {
+    try {
+      await updateUser(userId, { can_upload: !currentlyCanUpload });
+      showToast(currentlyCanUpload ? 'Upload permission removed' : 'Upload permission granted');
+      load();
+    } catch (e) {
+      alert(`Could not update upload permission: ${e.message}`);
+    }
+  };
+
+  const handleApprove = async (userId) => {
+    const chosenRole = pendingRoleChoice[userId] || 'Viewer';
+    try {
+      await approveUser(userId, chosenRole);
+      showToast(`User approved as ${chosenRole}`);
+      load();
+    } catch (e) {
+      alert(`Could not approve user: ${e.message}`);
     }
   };
 
@@ -110,6 +145,109 @@ export default function Admin() {
         </div>
       </div>
 
+      {/* Pending Approval — collapsible, SuperAdmin only, only rendered
+          at all if there's something to show */}
+      {canEditRoles && (
+        <div style={cardStyle}>
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setPendingOpen((v) => !v)}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setPendingOpen((v) => !v)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <UserCheck size={18} strokeWidth={2} style={{ color: 'var(--status-orange-text)' }} />
+              <h3 style={{ fontSize: '0.9375rem', margin: 0 }}>
+                Pending Approval
+                {pendingUsers.length > 0 && (
+                  <span
+                    style={{
+                      marginLeft: '8px',
+                      fontSize: '0.6875rem',
+                      fontWeight: 700,
+                      background: 'var(--status-orange-bg)',
+                      color: 'var(--status-orange-text)',
+                      padding: '2px 8px',
+                      borderRadius: '10px',
+                    }}
+                  >
+                    {pendingUsers.length}
+                  </span>
+                )}
+              </h3>
+            </div>
+            {pendingOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </div>
+
+          {pendingOpen && (
+            <div style={{ marginTop: '14px' }}>
+              {pendingUsers.length === 0 ? (
+                <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', margin: 0 }}>
+                  No pending requests right now.
+                </p>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid var(--border)', textAlign: 'left' }}>
+                        <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>NAME</th>
+                        <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>EMAIL</th>
+                        <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>ASSIGN ROLE</th>
+                        <th style={{ padding: '8px', color: 'var(--text-secondary)' }}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pendingUsers.map((u) => (
+                        <tr key={u.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                          <td style={{ padding: '10px 8px' }}>{u.displayName}</td>
+                          <td style={{ padding: '10px 8px' }}>{u.email}</td>
+                          <td style={{ padding: '10px 8px' }}>
+                            <select
+                              value={pendingRoleChoice[u.id] || 'Viewer'}
+                              onChange={(e) =>
+                                setPendingRoleChoice((prev) => ({ ...prev, [u.id]: e.target.value }))
+                              }
+                              style={{ padding: '4px 6px', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.75rem' }}
+                            >
+                              <option>Viewer</option>
+                              <option>Staff</option>
+                              <option>Admin</option>
+                            </select>
+                          </td>
+                          <td style={{ padding: '10px 8px' }}>
+                            <button
+                              onClick={() => handleApprove(u.id)}
+                              style={{
+                                background: 'var(--status-green-bg)',
+                                color: 'var(--status-green-text)',
+                                border: 'none',
+                                borderRadius: '4px',
+                                padding: '5px 12px',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Approve
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* User management */}
       <div style={cardStyle}>
         <h3 style={{ fontSize: '0.9375rem', marginBottom: '14px' }}>Users</h3>
@@ -120,6 +258,7 @@ export default function Admin() {
                 <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>NAME</th>
                 <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>EMAIL</th>
                 <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>ROLE</th>
+                <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>CAN UPLOAD</th>
                 <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>LAST LOGIN</th>
                 <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>STATUS</th>
               </tr>
@@ -127,7 +266,7 @@ export default function Admin() {
             <tbody>
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ padding: '32px 16px', textAlign: 'center' }}>
+                  <td colSpan={6} style={{ padding: '32px 16px', textAlign: 'center' }}>
                     {error ? (
                       <p style={{ fontSize: '0.8125rem', color: 'var(--status-red-text)', margin: 0 }}>
                         Couldn't load users — see error above.
@@ -173,6 +312,31 @@ export default function Admin() {
                         </select>
                       ) : (
                         <span>{u.role}</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '10px 8px' }}>
+                      {/* Upload permission only matters for Admin role,
+                          SuperAdmin can always upload, Staff/Viewer never can */}
+                      {u.role === 'Admin' && canEditRoles && !isSelf ? (
+                        <button
+                          onClick={() => handleToggleUpload(u.id, u.canUpload)}
+                          style={{
+                            background: u.canUpload ? 'var(--status-green-bg)' : 'var(--border)',
+                            color: u.canUpload ? 'var(--status-green-text)' : 'var(--text-muted)',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {u.canUpload ? 'Allowed' : 'Blocked'}
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {u.role === 'SuperAdmin' ? '—' : u.canUpload ? 'Allowed' : 'Blocked'}
+                        </span>
                       )}
                     </td>
                     <td style={{ padding: '10px 8px' }}>{u.lastLogin ?? '—'}</td>
