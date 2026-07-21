@@ -3,7 +3,7 @@ import { Users } from 'lucide-react';
 import PageContainer from '../components/PageContainer';
 import Toast from '../components/Toast';
 import { fetchAdminSummary, fetchUsers, updateUser } from '../services/adminService';
-import { msalInstance } from '../auth/msalInstance';
+import { useMsal } from '@azure/msal-react';
 
 // Loading skeleton for the KPI cards, shown while summary is still null
 // instead of a bare "—" (feedback item: "Quick Stats Placeholder").
@@ -23,15 +23,20 @@ function KpiSkeleton() {
 }
 
 export default function Admin() {
-  // Pull real role and email from the signed-in account's token claims
-  // instead of the old hardcoded 'Admin' stopgap (item #4).
-  const account = msalInstance.getActiveAccount();
-  const currentUserRoles = account?.idTokenClaims?.roles || [];
-  const role = currentUserRoles.includes('SuperAdmin')
+  const { instance } = useMsal();
+  const account = instance.getActiveAccount();
+
+  // Real role read from the signed-in account's token claims instead of
+  // the old hardcoded 'Admin' stopgap (item #4). Same pattern as Settings.jsx
+  // so both places always agree on the current user's role.
+  const roles = account?.idTokenClaims?.roles || [];
+  const role = roles.includes('SuperAdmin')
     ? 'SuperAdmin'
-    : currentUserRoles.includes('Admin')
+    : roles.includes('Admin')
     ? 'Admin'
-    : 'Staff';
+    : roles.includes('Staff')
+    ? 'Staff'
+    : 'Viewer';
   const currentUserEmail = account?.username || account?.idTokenClaims?.preferred_username;
 
   const canEditRoles = role === 'SuperAdmin';

@@ -59,10 +59,19 @@ export default function Layout() {
     .join('')
     .slice(0, 2)
     .toUpperCase();
-  // NOTE: hardcoded for now — item #4 on the feedback list (role should come
-  // from the database / JWT claim instead of being assumed here). Flagging so
-  // this line gets swapped out once that's wired up with Aryan's users table.
-  const role = 'Admin';
+
+// Real role read from the signed-in account's token claims instead of
+// the old hardcoded 'Admin' stopgap (item #4). Same pattern as
+// Admin.jsx and Settings.jsx so all three places always agree.
+
+  const roles = account?.idTokenClaims?.roles || [];
+  const role = roles.includes('SuperAdmin')
+    ? 'SuperAdmin'
+    : roles.includes('Admin')
+    ? 'Admin'
+    : roles.includes('Staff')
+    ? 'Staff'
+    : 'Viewer';
 
   const closeMenu = () => setMenuOpen(false);
 

@@ -17,10 +17,17 @@ export default function Settings() {
   const displayName = account?.name || account?.username || 'User';
   const email = account?.username || '—';
 
-  // NOTE: same hardcoded stopgap as Layout.jsx (item #4 on the feedback list)
-  // — needs to come from the DB/JWT instead. Kept identical here so both
-  // places update together once that's wired up.
-  const role = 'Admin';
+  // Real role read from the signed-in account's token claims instead of
+  // the old hardcoded 'Admin' stopgap (item #4). Kept identical logic to
+  // Admin.jsx so both places always agree on the current user's role.
+  const roles = account?.idTokenClaims?.roles || [];
+  const role = roles.includes('SuperAdmin')
+    ? 'SuperAdmin'
+    : roles.includes('Admin')
+    ? 'Admin'
+    : roles.includes('Staff')
+    ? 'Staff'
+    : 'Viewer';
 
   const [emailAlerts, setEmailAlerts] = useState(false);
 
@@ -145,9 +152,10 @@ export default function Settings() {
       </div>
 
       {/* Notifications — in-app option removed (#6). Email alerts visible to
-          Admins only (#7). Will actually restrict once real role from DB/JWT
-          replaces the hardcoded value above. */}
-      {role === 'Admin' && (
+          Admin and SuperAdmin only (#7). Now uses the real role from the
+          token, previously always showed since the hardcoded value was
+          always 'Admin'. */}
+      {(role === 'Admin' || role === 'SuperAdmin') && (
         <div style={cardStyle}>
           <h3 style={{ fontSize: '0.9375rem', marginBottom: '4px' }}>Notifications</h3>
           <Toggle
