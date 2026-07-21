@@ -4,11 +4,6 @@ import PageContainer from '../components/PageContainer';
 import Toast from '../components/Toast';
 import { fetchUploadHistory, deleteUpload, uploadFile, fetchMe } from '../services/adminService';
 
-// NOTE: uploadFile does not exist in adminService.js yet — needs a simple
-// fetch wrapper added (multipart/form-data POST), plus a matching backend
-// route (e.g. POST /uploads). Same gap flagged in Admin.jsx previously.
-// import { uploadFile } from '../services/adminService';
-
 const statusConfig = {
   complete: { bg: 'var(--status-green-bg)', text: 'var(--status-green-text)', label: 'Complete', icon: CheckCircle2 },
   processing: { bg: 'var(--status-orange-bg)', text: 'var(--status-orange-text)', label: 'Processing', icon: RotateCw },
@@ -20,22 +15,15 @@ const DATA_TYPES = ['Greenhouse', 'Solar', 'Weather'];
 const STATUSES = ['complete', 'processing', 'pending', 'failed'];
 
 export default function Upload() {
+  // Real role + upload permission, fetched from /me (database), replaces
+  // the old hardcoded 'Admin' stopgap that used to hide the upload zone
+  // for everyone.
   const [me, setMe] = useState(null);
   useEffect(() => {
     fetchMe().then(setMe).catch(() => setMe(null));
   }, []);
 
   const canUploadFiles = me?.role === 'SuperAdmin' || (me?.role === 'Admin' && me?.canUpload);
-  // NOTE: same hardcoded stopgap as Layout.jsx / Admin.jsx / Settings.jsx —
-  // needs to come from the DB/JWT instead. Since it's 'Admin' not
-  // 'SuperAdmin', both the upload zone and Delete action below will be
-  // HIDDEN for everyone until real role data replaces this.
-  const [me, setMe] = useState(null);
-useEffect(() => {
-  fetchMe().then(setMe).catch(() => setMe(null));
-}, []);
-
-const canUploadFiles = me?.role === 'SuperAdmin' || (me?.role === 'Admin' && me?.canUpload);
 
   const [uploads, setUploads] = useState([]);
   const [error, setError] = useState(null);
@@ -79,16 +67,13 @@ const canUploadFiles = me?.role === 'SuperAdmin' || (me?.role === 'Admin' && me?
       alert('File exceeds the 50MB limit.');
       return;
     }
-    // TODO: wire up once uploadFile exists in adminService.js + backend
-    console.error('uploadFile endpoint not implemented yet — see adminService.js TODO');
-    alert(`This feature isn't available yet — "${file.name}" was not uploaded.`);
     try {
-  await uploadFile(file, dataType);
-  showToast(`"${file.name}" uploaded`);
-  load();
-} catch (e) {
-  alert(`Could not upload: ${e.message}`);
-}
+      await uploadFile(file, dataType);
+      showToast(`"${file.name}" uploaded`);
+      load();
+    } catch (e) {
+      alert(`Could not upload: ${e.message}`);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -167,13 +152,14 @@ const canUploadFiles = me?.role === 'SuperAdmin' || (me?.role === 'Admin' && me?
 
   return (
     <PageContainer title="Data Upload" subtitle="Upload and track sensor data files">
-      {/* Upload zone — SuperAdmin only. History/filters below remain visible
-          to anyone who can reach this page; only the ability to upload or
-          delete is restricted. */}
+      {/* Upload zone — visible to SuperAdmin always, and to Admin only if
+          SuperAdmin has granted can_upload. History/filters below remain
+          visible to anyone who can reach this page; only the ability to
+          upload or delete is restricted. */}
       <div style={cardStyle}>
         <h3 style={{ fontSize: '0.9375rem', marginBottom: '16px' }}>Data Upload</h3>
 
-        {!isSuperAdmin ? (
+        {!canUploadFiles ? (
           <div
             style={{
               display: 'flex',
@@ -189,7 +175,7 @@ const canUploadFiles = me?.role === 'SuperAdmin' || (me?.role === 'Admin' && me?
           >
             <Lock size={24} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
             <p style={{ fontSize: '0.875rem', fontWeight: 600, margin: 0 }}>
-              Only SuperAdmins can upload new data files.
+              You do not have permission to upload data files.
             </p>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>
               You can still view upload history below.
@@ -419,20 +405,20 @@ const canUploadFiles = me?.role === 'SuperAdmin' || (me?.role === 'Admin' && me?
                 <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>Date</th>
                 <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>Rows</th>
                 <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>Status</th>
-                {isSuperAdmin && <th style={{ padding: '8px' }}></th>}
+                {canUploadFiles && <th style={{ padding: '8px' }}></th>}
               </tr>
             </thead>
             <tbody>
               {uploads.length === 0 && !error && (
                 <tr>
-                  <td colSpan={isSuperAdmin ? 7 : 6} style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <td colSpan={canUploadFiles ? 7 : 6} style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
                     No uploads yet — files you upload above will appear here.
                   </td>
                 </tr>
               )}
               {uploads.length > 0 && filteredUploads.length === 0 && (
                 <tr>
-                  <td colSpan={isSuperAdmin ? 7 : 6} style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <td colSpan={canUploadFiles ? 7 : 6} style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
                     No uploads match these filters.
                   </td>
                 </tr>
@@ -474,7 +460,7 @@ const canUploadFiles = me?.role === 'SuperAdmin' || (me?.role === 'Admin' && me?
                           <StatusIcon size={12} /> {status.label}
                         </span>
                       </td>
-                      {isSuperAdmin && (
+                      {canUploadFiles && (
                         <td style={{ padding: '10px 8px' }}>
                           <button
                             onClick={() => handleDeleteClick(row)}
@@ -487,10 +473,6 @@ const canUploadFiles = me?.role === 'SuperAdmin' || (me?.role === 'Admin' && me?
                         </td>
                       )}
                     </tr>
-                    {/* Inline validation error detail for failed uploads.
-                        NOTE: assumes the backend returns `row.missingColumns`
-                        (array of strings) on failed rows — confirm the real
-                        field name with Aryan and adjust if different. */}
                     {isFailed && row.errorMessage && (
                       <tr style={{ borderLeft: '3px solid var(--status-red-text)', borderBottom: '1px solid var(--border)' }}>
                         <td colSpan={canUploadFiles ? 7 : 6} style={{ padding: '4px 8px 16px 8px' }}>
