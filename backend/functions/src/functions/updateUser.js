@@ -35,7 +35,7 @@ const sqlConfig = {
 };
 
 const ALLOWED_ROLES = ["Admin", "Staff", "Viewer"];  // SuperAdmin not settable via API
-const ALLOWED_STATUSES = ["pending", "active"];
+const ALLOWED_STATUSES = ["pending", "active", "denied"];
 
 app.http("updateUser", {
   methods: ["PATCH"],

@@ -121,25 +121,11 @@ async function getOrCreateDbUser(decodedToken) {
   return created.recordset[0];
 }
 
-/**
- * Checks that a request has a valid JWT (Entra ID, proves identity) AND
- * that the person has an approved, active row in our database (proves
- * app-specific permission). Two separate checks, two separate systems.
- *
- * Usage inside a function handler:
- *
- *   const { checkAuth } = require("../../shared/authMiddleware");
- *   const user = await checkAuth(request, ["Admin", "SuperAdmin"]);
- *
- * Throws an Error with a `.status` property if the check fails:
- *   401 - missing/invalid token (Entra ID check failed)
- *   428 - valid token, but account is pending SuperAdmin approval
- *   403 - valid token, approved, but wrong role for this action
- *
- * Returns the merged user object (token claims + database row, including
- * `.role`, `.status`, `.can_upload`, `.user_id`) if everything passes.
- */
-async function checkAuth(request, allowedRoles = null) {
+// Verifies the JWT and fetches the database user, without any status or
+// role gating. Used internally by checkAuth, and directly by endpoints
+// that need to act on a denied/pending account (like reapply.js), which
+// checkAuth's normal gating would otherwise block before they can run.
+async function getAuthenticatedUser(request) {
   const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -148,7 +134,7 @@ async function checkAuth(request, allowedRoles = null) {
     throw err;
   }
 
-  const token = authHeader.substring(7); // strip "Bearer "
+  const token = authHeader.substring(7);
 
   let decoded;
   try {
@@ -159,36 +145,54 @@ async function checkAuth(request, allowedRoles = null) {
     throw err;
   }
 
-  // Entra ID confirmed identity. Now check our own database for
-  // app-specific approval and role.
   const dbUser = await getOrCreateDbUser(decoded);
+  return { ...decoded, ...dbUser };
+}
 
-  if (dbUser.status === "pending") {
+/**
+ * Checks that a request has a valid JWT AND that the person has an
+ * approved, active row in our database.
+ *
+ * Throws an Error with a `.status` property if the check fails:
+ *   401 - missing/invalid token
+ *   428 - account is pending SuperAdmin approval
+ *   423 - account was denied
+ *   403 - deactivated, or wrong role for this action
+ *
+ * Returns the merged user object if everything passes.
+ */
+async function checkAuth(request, allowedRoles = null) {
+  const user = await getAuthenticatedUser(request);
+
+  if (user.status === "pending") {
     const err = new Error("Your account is pending SuperAdmin approval.");
-    err.status = 428; // distinct code so the frontend can show a wait screen, not a generic error
+    err.status = 428;
     throw err;
   }
 
-  if (!dbUser.active) {
+  if (user.status === "denied") {
+    const err = new Error("Your access request was denied.");
+    err.status = 423;
+    throw err;
+  }
+
+  if (!user.active) {
     const err = new Error("Your account has been deactivated.");
     err.status = 403;
     throw err;
   }
 
-  // Role check now uses the DATABASE role, not the JWT token's role claim.
-  // This is what makes SuperAdmin's in-app role changes actually take effect.
   if (allowedRoles && allowedRoles.length > 0) {
-    if (!allowedRoles.includes(dbUser.role)) {
+    if (!allowedRoles.includes(user.role)) {
       const err = new Error(
-        `Forbidden: requires one of [${allowedRoles.join(", ")}], user has [${dbUser.role}]`
+        `Forbidden: requires one of [${allowedRoles.join(", ")}], user has [${user.role}]`
       );
       err.status = 403;
       throw err;
     }
   }
 
-  // Merge token claims with the DB row so handlers have access to both
-  return { ...decoded, ...dbUser };
+  return user;
 }
 
-module.exports = { checkAuth };
+module.exports = { checkAuth, getAuthenticatedUser };

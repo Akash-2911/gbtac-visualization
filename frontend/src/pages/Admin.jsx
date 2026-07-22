@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../auth/UserContext';
 import { Users, ChevronDown, ChevronUp, UserCheck } from 'lucide-react';
 import PageContainer from '../components/PageContainer';
+import Toggle from '../components/Toggle';
 import Toast from '../components/Toast';
+import { fetchAdminSummary, fetchUsers, fetchPendingUsers, updateUser, approveUser, denyUser } from '../services/adminService';
 import { useMsal } from '@azure/msal-react';
 import {
   fetchAdminSummary,
@@ -93,6 +95,16 @@ export default function Admin() {
       load();
     } catch (e) {
       alert(`Could not update upload permission: ${e.message}`);
+    }
+  };
+
+const handleDeny = async (userId) => {
+    try {
+      await denyUser(userId);
+      showToast('User denied');
+      load();
+    } catch (e) {
+      alert(`Could not deny user: ${e.message}`);
     }
   };
 
@@ -215,21 +227,38 @@ export default function Admin() {
                             </select>
                           </td>
                           <td style={{ padding: '10px 8px' }}>
-                            <button
-                              onClick={() => handleApprove(u.id)}
-                              style={{
-                                background: 'var(--status-green-bg)',
-                                color: 'var(--status-green-text)',
-                                border: 'none',
-                                borderRadius: '4px',
-                                padding: '5px 12px',
-                                fontSize: '0.75rem',
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                              }}
-                            >
-                              Approve
-                            </button>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button
+                                onClick={() => handleApprove(u.id)}
+                                style={{
+                                  background: 'var(--status-green-bg)',
+                                  color: 'var(--status-green-text)',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  padding: '5px 12px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleDeny(u.id)}
+                                style={{
+                                  background: 'var(--status-red-bg)',
+                                  color: 'var(--status-red-text)',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  padding: '5px 12px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                Deny
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -312,53 +341,32 @@ export default function Admin() {
                       {/* Upload permission only matters for Admin role,
                           SuperAdmin can always upload, Staff/Viewer never can */}
                       {u.role === 'Admin' && canEditRoles && !isSelf ? (
-                        <button
-                          onClick={() => handleToggleUpload(u.id, u.canUpload)}
+                        <Toggle
+                          checked={u.canUpload}
+                          onChange={() => handleToggleUpload(u.id, u.canUpload)}
+                          label=""
+                        />
+                      ) : (
+                        <span
                           style={{
-                            background: u.canUpload ? 'var(--status-green-bg)' : 'var(--border)',
-                            color: u.canUpload ? 'var(--status-green-text)' : 'var(--text-muted)',
-                            border: 'none',
+                            background: 'var(--status-green-bg)',
+                            color: 'var(--status-green-text)',
                             borderRadius: '4px',
                             padding: '4px 10px',
                             fontSize: '0.75rem',
                             fontWeight: 600,
-                            cursor: 'pointer',
                           }}
                         >
-                          {u.canUpload ? 'Allowed' : 'Blocked'}
-                        </button>
-                      ) : (
-                        <span
-  style={{
-    background: 'var(--status-green-bg)',
-    color: 'var(--status-green-text)',
-    borderRadius: '4px',
-    padding: '4px 10px',
-    fontSize: '0.75rem',
-    fontWeight: 600,
-  }}
->
-  {u.role === 'SuperAdmin' ? 'Allowed' : u.canUpload ? 'Allowed' : 'Blocked'}
-</span>
+                          {u.role === 'SuperAdmin' ? 'Allowed' : u.canUpload ? 'Allowed' : 'Blocked'}
+                        </span>
                       )}
                     </td>
-                    <td style={{ padding: '10px 8px' }}>{u.lastLogin ?? '—'}</td>
                     <td style={{ padding: '10px 8px' }}>
-                      <button
-                        onClick={() => handleToggleActive(u.id, u.active)}
-                        style={{
-                          background: u.active ? 'var(--status-green-bg)' : 'var(--status-red-bg)',
-                          color: u.active ? 'var(--status-green-text)' : 'var(--status-red-text)',
-                          border: 'none',
-                          borderRadius: '4px',
-                          padding: '4px 10px',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {u.active ? 'Active' : 'Inactive'}
-                      </button>
+                      <Toggle
+                        checked={u.active}
+                        onChange={() => handleToggleActive(u.id, u.active)}
+                        label=""
+                      />
                     </td>
                   </tr>
                 );

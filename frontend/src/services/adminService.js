@@ -71,6 +71,14 @@ export function updateUser(id, changes) {
   });
 }
 
+export function denyUser(id) {
+  return updateUser(id, { status: 'denied' });
+}
+
+export function reapplyAccess() {
+  return authFetch('/reapply', { method: 'POST' });
+}
+
 export function approveUser(id, role) {
   return updateUser(id, { status: 'active', role });
 }

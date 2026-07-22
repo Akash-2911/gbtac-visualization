@@ -26,9 +26,11 @@ export function UserProvider({ children }) {
         setUser(data);
         setStatus('ready');
       })
-      .catch((err) => {
+     .catch((err) => {
         if (err.status === 428) {
           setStatus('pending');
+        } else if (err.status === 423) {
+          setStatus('denied');
         } else {
           console.error('UserContext /me check failed:', err.message);
           setStatus('error');
