@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Toggle({ checked, onChange, label }) {
+export default function Toggle({ checked, onChange, label, disabled = false }) {
   return (
     <label
       style={{
@@ -9,12 +9,13 @@ export default function Toggle({ checked, onChange, label }) {
         justifyContent: 'space-between',
         padding: '12px 0',
         fontSize: '0.875rem',
-        cursor: 'pointer',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.5 : 1,
       }}
     >
       <span>{label}</span>
       <span
-        onClick={() => onChange(!checked)}
+        onClick={() => !disabled && onChange(!checked)}
         style={{
           width: '38px',
           height: '22px',

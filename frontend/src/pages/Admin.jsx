@@ -54,8 +54,14 @@ export default function Admin() {
 
   const load = useCallback(() => {
     fetchAdminSummary().then(setSummary).catch((e) => setError(e.message));
-    fetchUsers()
-      .then((data) => setUsers(Array.isArray(data) ? data : data?.users || data?.data || []))
+fetchUsers()
+      .then((data) => {
+        const all = Array.isArray(data) ? data : data?.users || data?.data || [];
+        // Only show approved users here, pending users live in the
+        // Pending Approval section above, denied users don't need to
+        // clutter this table either.
+        setUsers(all.filter((u) => u.status === 'active'));
+      })
       .catch((e) => setError(e.message));
     if (canEditRoles) {
       fetchPendingUsers()
@@ -205,7 +211,7 @@ const handleDeny = async (userId) => {
                         <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>NAME</th>
                         <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>EMAIL</th>
                         <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>ASSIGN ROLE</th>
-                        <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>ACTION</th>
+                        <th style={{ padding: '8px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>ACTION</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -226,7 +232,7 @@ const handleDeny = async (userId) => {
                               <option>Admin</option>
                             </select>
                           </td>
-                          <td style={{ padding: '10px 8px' }}>
+                          <td style={{ padding: '10px 8px', whiteSpace: 'nowrap' }}>
                             <div style={{ display: 'flex', gap: '6px' }}>
                               <button
                                 onClick={() => handleApprove(u.id)}
@@ -338,45 +344,38 @@ const handleDeny = async (userId) => {
                       )}
                     </td>
                     <td style={{ padding: '10px 8px' }}>
-                      {u.role === 'Admin' && canEditRoles && !isSelf ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Toggle
-                            checked={u.canUpload}
-                            onChange={() => handleToggleUpload(u.id, u.canUpload)}
-                            label=""
-                          />
-                          <span
-                            style={{
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              color: u.canUpload ? 'var(--status-green-text)' : 'var(--status-red-text)',
-                            }}
-                          >
-                            {u.canUpload ? 'Allowed' : 'Blocked'}
-                          </span>
-                        </div>
-                      ) : (
-                        <span
-                          style={{
-                            background: u.role === 'SuperAdmin' || u.canUpload ? 'var(--status-green-bg)' : 'var(--status-red-bg)',
-                            color: u.role === 'SuperAdmin' || u.canUpload ? 'var(--status-green-text)' : 'var(--status-red-text)',
-                            borderRadius: '4px',
-                            padding: '4px 10px',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                          }}
-                        >
-                          {u.role === 'SuperAdmin' ? 'Allowed' : u.canUpload ? 'Allowed' : 'Blocked'}
-                        </span>
-                      )}
+                      {(() => {
+                        const isUploadAllowed = u.role === 'SuperAdmin' || u.canUpload;
+                        const canToggleUpload = u.role === 'Admin' && canEditRoles && !isSelf;
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                            <Toggle
+                              checked={isUploadAllowed}
+                              onChange={() => handleToggleUpload(u.id, u.canUpload)}
+                              label=""
+                              disabled={!canToggleUpload}
+                            />
+                            <span
+                              style={{
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                color: isUploadAllowed ? 'var(--status-green-text)' : 'var(--status-red-text)',
+                              }}
+                            >
+                              {isUploadAllowed ? 'Allowed' : 'Blocked'}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td style={{ padding: '10px 8px' }}>{u.lastLogin ?? '—'}</td>
                     <td style={{ padding: '10px 8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                         <Toggle
                           checked={u.active}
                           onChange={() => handleToggleActive(u.id, u.active)}
                           label=""
+                          disabled={isSelf}
                         />
                         <span
                           style={{
