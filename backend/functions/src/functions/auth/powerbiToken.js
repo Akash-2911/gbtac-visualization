@@ -72,11 +72,6 @@ app.http("powerbiToken", {
         jsonBody: {
           error: "Failed to generate embed token",
           details: err.message,
-          // Temporary debug info — remove before production
-          debug: {
-            status: err.status,
-            stack: err.stack,
-          },
         },
       };
     }
