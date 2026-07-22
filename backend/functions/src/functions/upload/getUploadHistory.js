@@ -16,7 +16,7 @@
  */
 
 const { app } = require("@azure/functions");
-const { checkAuth } = require("../../shared/authMiddleware");
+const { checkAuth } = require("../../../shared/authMiddleware");
 const sql = require("mssql");
 
 const sqlConfig = {

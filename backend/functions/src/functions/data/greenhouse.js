@@ -1,6 +1,6 @@
 const { app } = require("@azure/functions");
-const { getPool, sql } = require("../../shared/sqlClient");
-const { checkAuth } = require("../../shared/authMiddleware");
+const { getPool, sql } = require("../../../shared/sqlClient");
+const { checkAuth } = require("../../../shared/authMiddleware");
 
 const ENERGY_COLUMNS = [
   "chiller_pa_kwh", "chiller_pb_kwh",

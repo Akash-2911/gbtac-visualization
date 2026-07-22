@@ -1,5 +1,5 @@
 const { app } = require("@azure/functions");
-const { checkAuth } = require("../../shared/authMiddleware");
+const { checkAuth } = require("../../../shared/authMiddleware");
 
 // GET /me
 // Simple identity check the frontend calls right after login, before

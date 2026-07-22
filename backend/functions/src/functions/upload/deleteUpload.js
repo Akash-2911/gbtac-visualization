@@ -12,7 +12,7 @@
  */
 
 const { app } = require("@azure/functions");
-const { checkAuth } = require("../../shared/authMiddleware");
+const { checkAuth } = require("../../../shared/authMiddleware");
 const sql = require("mssql");
 
 // SQL connection config — reads from environment variables set in Azure Function App

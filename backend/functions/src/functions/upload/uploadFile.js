@@ -1,7 +1,7 @@
 const { app } = require("@azure/functions");
-const { checkAuth } = require("../../shared/authMiddleware");
-const { uploadFileToBlob } = require("../../shared/blobStorage");
-const { queueUploadMessage } = require("../../shared/serviceBusQueue");
+const { checkAuth } = require("../../../shared/authMiddleware");
+const { uploadFileToBlob } = require("../../../shared/blobStorage");
+const { queueUploadMessage } = require("../../../shared/serviceBusQueue");
 
 app.http("uploadFile", {
   methods: ["POST"],

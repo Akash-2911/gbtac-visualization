@@ -1,6 +1,6 @@
 const { app } = require("@azure/functions");
-const { getPool, sql } = require("../../shared/sqlClient");
-const { checkAuth } = require("../../shared/authMiddleware");
+const { getPool, sql } = require("../../../shared/sqlClient");
+const { checkAuth } = require("../../../shared/authMiddleware");
 
 // Appliance columns that make up "Total Energy Used" - mains_* is
 // intentionally excluded (unreliable sensor, confirmed with client).
