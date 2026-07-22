@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { msalInstance } from './msalInstance';
 import { authFetch } from '../services/apiClient';
 import PendingApproval from '../pages/PendingApproval';
+import AccessDenied from '../pages/AccessDenied';
 
 export default function ProtectedRoute({ children }) {
   const accounts = msalInstance.getAllAccounts();
@@ -35,10 +36,13 @@ export default function ProtectedRoute({ children }) {
     return null; // could swap for a loading spinner if you want one
   }
 
-  if (status === 'pending') {
+if (status === 'pending') {
     return <PendingApproval />;
   }
 
+  if (status === 'denied') {
+    return <AccessDenied />;
+  }
   if (status === 'error') {
     return <Navigate to="/login" replace />;
   }

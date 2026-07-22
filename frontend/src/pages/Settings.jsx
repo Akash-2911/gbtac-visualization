@@ -23,8 +23,6 @@ export default function Settings() {
   const { user } = useUser();
   const role = user?.role || 'Viewer';
 
-  const [emailAlerts, setEmailAlerts] = useState(false);
-
   // Accessibility state — moved here from Admin.jsx, since individual
   // accessibility preferences are personal, not org-wide.
   const [highContrast, setHighContrast] = useState(
@@ -47,11 +45,6 @@ export default function Settings() {
     setFontScale(value);
     document.documentElement.setAttribute('data-font-scale', value);
     showToast(`Text size set to ${value}`);
-  };
-
-  const toggleEmailAlerts = (checked) => {
-    setEmailAlerts(checked);
-    showToast(checked ? 'Email alerts turned on' : 'Email alerts turned off');
   };
 
   const rowStyle = {
@@ -144,21 +137,6 @@ export default function Settings() {
           </div>
         </div>
       </div>
-
-      {/* Notifications — in-app option removed (#6). Email alerts visible to
-          Admin and SuperAdmin only (#7). Now uses the real role from the
-          token, previously always showed since the hardcoded value was
-          always 'Admin'. */}
-      {(role === 'Admin' || role === 'SuperAdmin') && (
-        <div style={cardStyle}>
-          <h3 style={{ fontSize: '0.9375rem', marginBottom: '4px' }}>Notifications</h3>
-          <Toggle
-            checked={emailAlerts}
-            onChange={toggleEmailAlerts}
-            label="Email alerts for failed uploads"
-          />
-        </div>
-      )}
 
       <Toast message={toastMessage} onDismiss={() => setToastMessage('')} />
     </PageContainer>
