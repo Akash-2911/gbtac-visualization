@@ -201,11 +201,11 @@ const handleDeny = async (userId) => {
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
                     <thead>
-                      <tr style={{ borderBottom: '2px solid var(--border)', textAlign: 'left' }}>
+                     <tr style={{ borderBottom: '2px solid var(--border)', textAlign: 'left' }}>
                         <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>NAME</th>
                         <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>EMAIL</th>
                         <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>ASSIGN ROLE</th>
-                        <th style={{ padding: '8px', color: 'var(--text-secondary)' }}></th>
+                        <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>ACTION</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -281,9 +281,9 @@ const handleDeny = async (userId) => {
                 <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>NAME</th>
                 <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>EMAIL</th>
                 <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>ROLE</th>
-                <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>CAN UPLOAD</th>
+               <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>CAN UPLOAD</th>
                 <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>LAST LOGIN</th>
-                <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>STATUS</th>
+                <th style={{ padding: '8px', color: 'var(--text-secondary)' }}>ACCESS</th>
               </tr>
             </thead>
             <tbody>
@@ -338,19 +338,28 @@ const handleDeny = async (userId) => {
                       )}
                     </td>
                     <td style={{ padding: '10px 8px' }}>
-                      {/* Upload permission only matters for Admin role,
-                          SuperAdmin can always upload, Staff/Viewer never can */}
                       {u.role === 'Admin' && canEditRoles && !isSelf ? (
-                        <Toggle
-                          checked={u.canUpload}
-                          onChange={() => handleToggleUpload(u.id, u.canUpload)}
-                          label=""
-                        />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Toggle
+                            checked={u.canUpload}
+                            onChange={() => handleToggleUpload(u.id, u.canUpload)}
+                            label=""
+                          />
+                          <span
+                            style={{
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              color: u.canUpload ? 'var(--status-green-text)' : 'var(--status-red-text)',
+                            }}
+                          >
+                            {u.canUpload ? 'Allowed' : 'Blocked'}
+                          </span>
+                        </div>
                       ) : (
                         <span
                           style={{
-                            background: 'var(--status-green-bg)',
-                            color: 'var(--status-green-text)',
+                            background: u.role === 'SuperAdmin' || u.canUpload ? 'var(--status-green-bg)' : 'var(--status-red-bg)',
+                            color: u.role === 'SuperAdmin' || u.canUpload ? 'var(--status-green-text)' : 'var(--status-red-text)',
                             borderRadius: '4px',
                             padding: '4px 10px',
                             fontSize: '0.75rem',
@@ -361,12 +370,24 @@ const handleDeny = async (userId) => {
                         </span>
                       )}
                     </td>
+                    <td style={{ padding: '10px 8px' }}>{u.lastLogin ?? '—'}</td>
                     <td style={{ padding: '10px 8px' }}>
-                      <Toggle
-                        checked={u.active}
-                        onChange={() => handleToggleActive(u.id, u.active)}
-                        label=""
-                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Toggle
+                          checked={u.active}
+                          onChange={() => handleToggleActive(u.id, u.active)}
+                          label=""
+                        />
+                        <span
+                          style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            color: u.active ? 'var(--status-green-text)' : 'var(--status-red-text)',
+                          }}
+                        >
+                          {u.active ? 'Unblocked' : 'Blocked'}
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 );
