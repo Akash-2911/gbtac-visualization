@@ -1,26 +1,10 @@
 import React from 'react';
-import { useMsal } from '@azure/msal-react';
-import { Navigate } from 'react-router-dom';
 import { Moon, SunMedium } from 'lucide-react';
-import { loginRequest } from '../auth/authConfig';
-import { msalInstance } from '../auth/msalInstance';
 import { useTheme } from '../components/ThemeContext';
 import GreenhouseScene from '../components/GreenhouseScene';
 
-export default function Login() {
-  const { instance } = useMsal();
-  const isAuthenticated = msalInstance.getAllAccounts().length > 0;
+export default function PendingApproval() {
   const { theme, setTheme } = useTheme();
-
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-
-  const handleMicrosoftLogin = () => {
-    sessionStorage.clear();
-    instance.loginRedirect(loginRequest);
-  };
-
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
 
   return (
@@ -67,42 +51,43 @@ export default function Login() {
           style={{
             backgroundColor: 'var(--surface)',
             borderRadius: '12px',
-            padding: 'clamp(28px, 6vw, 48px)',
+            padding: 'clamp(24px, 6vw, 32px)',
             width: '100%',
             textAlign: 'center',
             boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
           }}
         >
-          <h2 style={{ fontSize: '17px', letterSpacing: '0.03em', marginBottom: '20px' }}>
-            SOUTHERN ALBERTA INSTITUTE OF TECHNOLOGY
-          </h2>
-          <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '0 0 24px' }} />
-          <h1 style={{ fontSize: '24px', marginBottom: '24px' }}>GBTAC</h1>
-
-          <button
-            onClick={handleMicrosoftLogin}
+          <div
             style={{
-              width: '100%',
-              padding: '12px',
-              marginBottom: '20px',
-              border: 'none',
-              borderRadius: '8px',
-              backgroundColor: 'var(--accent-blue)',
-              color: '#fff',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: 'pointer',
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--status-orange-bg)',
+              color: 'var(--status-orange-text)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px',
+              margin: '0 auto 20px',
             }}
           >
-            Sign in with Microsoft
-          </button>
+            ⏳
+          </div>
 
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontStyle: 'italic', marginBottom: '20px' }}>
-            For GBTAC staff and authorized users only
+          <h1 style={{ fontSize: '22px', marginBottom: '12px', color: 'var(--text-primary)' }}>
+            Waiting for approval
+          </h1>
+
+          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '24px' }}>
+            Your account has been created. A SuperAdmin needs to approve your
+            access before you can use the dashboard.
           </p>
-          <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '0 0 16px' }} />
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            By signing in you agree to GBTAC's acceptable use policy.
+
+          <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '0 0 20px' }} />
+
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+            You'll be signed in automatically once your access is approved,
+            no need to do anything else right now.
           </p>
         </div>
       </div>

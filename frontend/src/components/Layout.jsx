@@ -1,29 +1,103 @@
-import React, { useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import TopBar from './TopBar';
+import React, { useState, useEffect } from 'react';
+import { useUser } from '../auth/UserContext';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useMsal } from '@azure/msal-react';
+import {
+  LayoutGrid,
+  Zap,
+  Sun,
+  Leaf,
+  CloudRain,
+  ArrowLeftRight,
+  Sparkles,
+  ShieldCheck,
+  Settings as SettingsIcon,
+  Moon,
+  SunMedium,
+  LogOut,
+  UploadCloud,
+} from 'lucide-react';
+import { useTheme } from '../components/ThemeContext';
 
-const navItems = [
-  { path: '/', label: 'Overview' },
-  { path: '/energy', label: 'Energy' },
-  { path: '/solar', label: 'Solar' },
-  { path: '/emissions', label: 'Emissions' },
-  { path: '/weather', label: 'Weather' },
-  { path: '/compare', label: 'Compare' },
-  { path: '/ai-assistant', label: 'AI Assistant', beta: true },
-];
+// Each item can declare allowedRoles; omitted means visible to everyone
+// signed in. Filtered per-render based on the real database role.
+function getNavGroups(role) {
+  const groups = [
+    {
+      label: 'DASHBOARDS',
+      items: [
+        { path: '/', label: 'Overview', icon: LayoutGrid, end: true },
+        { path: '/energy', label: 'Energy', icon: Zap },
+        { path: '/solar', label: 'Solar', icon: Sun },
+        { path: '/emissions', label: 'Emissions', icon: Leaf },
+        { path: '/weather', label: 'Weather', icon: CloudRain },
+        { path: '/compare', label: 'Compare', icon: ArrowLeftRight },
+      ],
+    },
+    {
+      label: 'ADVANCED',
+      items: [
+        {
+          path: '/ai-assistant',
+          label: 'AI Assistant',
+          icon: Sparkles,
+          beta: true,
+          allowedRoles: ['Staff', 'Admin', 'SuperAdmin'],
+        },
+      ],
+    },
+    {
+      label: 'MANAGEMENT',
+      items: [
+        { path: '/admin', label: 'Admin', icon: ShieldCheck, end: true, allowedRoles: ['Admin', 'SuperAdmin'] },
+        { path: '/admin/upload', label: 'Data Upload', icon: UploadCloud, allowedRoles: ['Admin', 'SuperAdmin'] },
+        { path: '/settings', label: 'Settings', icon: SettingsIcon },
+      ],
+    },
+  ];
 
-const bottomItems = [{ path: '/settings', label: 'Settings' }];
+  return groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => !item.allowedRoles || item.allowedRoles.includes(role)),
+    }))
+    .filter((group) => group.items.length > 0);
+}
 
 export default function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { instance } = useMsal();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
 
-  const currentLabel =
-    [...navItems, ...bottomItems].find((item) =>
-      item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)
-    )?.label || 'Overview';
+  const account = instance.getActiveAccount();
+  const displayName = account?.name || account?.username || 'User';
+  const initials = displayName
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+// Real role read from the database via /me (shared UserContext), not
+  // the JWT token, since SuperAdmin approval only updates the database.
+  const { user } = useUser();
+  const role = user?.role || 'Viewer';
+
+  const navGroups = getNavGroups(role);
 
   const closeMenu = () => setMenuOpen(false);
+
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+
+  const handleLogout = () => {
+    instance.logoutRedirect({
+      postLogoutRedirectUri: window.location.origin + '/login',
+    });
+  };
 
   return (
     <div style={{ height: '100vh', overflow: 'hidden' }}>
@@ -31,17 +105,19 @@ export default function Layout() {
         Skip to main content
       </a>
 
-      <button
-        type="button"
-        className="gbtac-hamburger"
-        aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-        aria-expanded={menuOpen}
-        onClick={() => setMenuOpen(!menuOpen)}
-      >
-        {menuOpen ? '✕' : '☰'}
-      </button>
+      {!menuOpen && (
+        <button
+          type="button"
+          className="gbtac-hamburger"
+          aria-label="Open navigation menu"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen(true)}
+        >
+          ☰
+        </button>
+      )}
 
-      {menuOpen && <div className="gbtac-backdrop" onClick={closeMenu} aria-hidden="true" />}
+      {menuOpen && <div className="gbtac-backdrop open" onClick={closeMenu} aria-hidden="true" />}
 
       <nav
         aria-label="Main navigation"
@@ -56,78 +132,225 @@ export default function Layout() {
           padding: '20px 0',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between',
           zIndex: 30,
         }}
       >
-        <div>
-          <div style={{ padding: '0 20px', marginBottom: '28px' }}>
-            <h2 style={{ fontSize: '18px', color: '#fff' }}>GBTAC</h2>
-            <p style={{ fontSize: '12px', color: '#8FA0BD', margin: '2px 0 0' }}>Energy Systems</p>
+        {/* Header row + in-panel close button (mobile only) */}
+        <div
+          style={{
+            padding: '0 20px',
+            marginBottom: '20px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            flexShrink: 0,
+          }}
+        >
+          <div>
+            <h2 style={{ fontSize: '1.125rem', color: '#fff', margin: 0 }}>GBTAC</h2>
+            <p style={{ fontSize: '0.75rem', color: '#8FA0BD', margin: '2px 0 0' }}>Energy Systems</p>
           </div>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {navItems.map((item) => (
-              <li key={item.path}>
-                <NavLink
-                  to={item.path}
-                  end={item.path === '/'}
-                  onClick={closeMenu}
-                  style={({ isActive }) => ({
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '11px 20px',
-                    color: isActive ? '#fff' : 'var(--sidebar-text)',
-                    backgroundColor: isActive ? 'rgba(59,130,246,0.15)' : 'transparent',
-                    borderLeft: isActive ? '3px solid var(--accent-blue)' : '3px solid transparent',
-                    textDecoration: 'none',
-                    fontSize: '14px',
-                    fontWeight: isActive ? 600 : 400,
-                  })}
-                >
-                  {item.label}
-                  {item.beta && (
-                    <span style={{ fontSize: '10px', background: '#7C3AED', color: '#fff', padding: '1px 6px', borderRadius: '999px' }}>
-                      BETA
-                    </span>
-                  )}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
+          <button
+            type="button"
+            className="gbtac-inpanel-close"
+            aria-label="Close navigation menu"
+            onClick={closeMenu}
+            style={{
+              display: 'none',
+              background: 'none',
+              border: 'none',
+              color: '#fff',
+              fontSize: '1.125rem',
+              lineHeight: 1,
+              cursor: 'pointer',
+              padding: '2px 4px',
+            }}
+          >
+            ✕
+          </button>
         </div>
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px' }}>
-          {bottomItems.map((item) => (
-            <li key={item.path}>
-              <NavLink
-                to={item.path}
-                onClick={closeMenu}
-                style={({ isActive }) => ({
-                  display: 'block',
-                  padding: '10px 20px',
-                  color: isActive ? '#fff' : 'var(--sidebar-text)',
-                  textDecoration: 'none',
-                  fontSize: '13px',
-                })}
+
+        {/* Scrollable nav groups */}
+        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+          {navGroups.map((group) => (
+            <div key={group.label} style={{ marginBottom: '18px' }}>
+              <p
+                style={{
+                  fontSize: '0.625rem',
+                  fontWeight: 600,
+                  color: '#5F7290',
+                  letterSpacing: '0.08em',
+                  padding: '0 20px',
+                  margin: '0 0 6px',
+                }}
               >
-                {item.label}
-              </NavLink>
-            </li>
+                {group.label}
+              </p>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.path}>
+                      <NavLink
+                        to={item.path}
+                        end={item.end}
+                        onClick={closeMenu}
+                        style={({ isActive }) => ({
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '10px 20px',
+                          color: isActive ? '#fff' : 'var(--sidebar-text)',
+                          backgroundColor: isActive ? 'rgba(59,130,246,0.15)' : 'transparent',
+                          borderLeft: isActive ? '3px solid var(--accent-blue)' : '3px solid transparent',
+                          textDecoration: 'none',
+                          fontSize: '0.875rem',
+                          fontWeight: isActive ? 600 : 400,
+                        })}
+                      >
+                        <Icon size={17} strokeWidth={2} style={{ flexShrink: 0 }} />
+                        <span>{item.label}</span>
+                        {item.beta && (
+                          <span
+                            style={{
+                              marginLeft: 'auto',
+                              fontSize: '0.5625rem',
+                              fontWeight: 700,
+                              background: 'var(--accent-purple)',
+                              color: '#fff',
+                              padding: '1px 6px',
+                              borderRadius: '10px',
+                            }}
+                          >
+                            BETA
+                          </span>
+                        )}
+                      </NavLink>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
+
+        {/* Bottom section: Dark mode toggle -> profile card -> Sign out.
+            This is the ONLY place theme is controlled — removed from
+            Settings to avoid the two-controls-one-value desync bug. */}
+        <div style={{ flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '12px' }}>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              width: '100%',
+              padding: '10px 20px',
+              background: 'none',
+              border: 'none',
+              color: 'var(--sidebar-text)',
+              fontSize: '0.875rem',
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
+          >
+            {theme === 'light' ? <Moon size={17} /> : <SunMedium size={17} />}
+            <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+          </button>
+
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => {
+              navigate('/settings');
+              closeMenu();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                navigate('/settings');
+                closeMenu();
+              }
+            }}
+            aria-label="Go to your account settings"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '10px 20px',
+              marginTop: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                backgroundColor: '#6D2077',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                flexShrink: 0,
+              }}
+            >
+              {initials}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <p
+                style={{
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  color: '#fff',
+                  margin: 0,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {displayName}
+              </p>
+              <p style={{ fontSize: '0.6875rem', color: '#8FA0BD', margin: 0 }}>{role}</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            aria-label="Sign out"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              width: '100%',
+              padding: '10px 20px',
+              background: 'none',
+              border: 'none',
+              color: 'var(--status-red-text)',
+              fontSize: '0.875rem',
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
+          >
+            <LogOut size={17} />
+            <span>Sign Out</span>
+          </button>
+        </div>
       </nav>
 
-      <div className="gbtac-topbar-wrap" style={{ position: 'fixed', top: 0, left: 'var(--sidebar-width)', right: 0, height: 'var(--topbar-height)', zIndex: 10 }}>
-        <TopBar pageTitle={currentLabel} />
-      </div>
-
+      {/* Header bar removed entirely (feedback item #5) — each page renders
+          its own title via PageContainer, so there's no more duplicate
+          "Overview" showing twice on the same screen. */}
       <main
         id="main-content"
         tabIndex={-1}
         className="gbtac-main"
         style={{
           position: 'absolute',
-          top: 'var(--topbar-height)',
+          top: 0,
           left: 'var(--sidebar-width)',
           right: 0,
           bottom: 0,
@@ -153,15 +376,11 @@ export default function Layout() {
           z-index: 100;
           transition: top 0.15s;
         }
-        .skip-link:focus {
-          top: 8px;
-        }
-        .gbtac-hamburger {
-          display: none;
-        }
-        .gbtac-backdrop {
-          display: none;
-        }
+        .skip-link:focus { top: 8px; }
+
+        .gbtac-hamburger { display: none; }
+        .gbtac-backdrop { display: none; }
+
         a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
           outline: 2px solid var(--accent-blue);
           outline-offset: 2px;
@@ -173,7 +392,7 @@ export default function Layout() {
             align-items: center;
             justify-content: center;
             position: fixed;
-            top: 14px;
+            top: calc(14px + env(safe-area-inset-top));
             left: 14px;
             width: 36px;
             height: 36px;
@@ -185,22 +404,29 @@ export default function Layout() {
             cursor: pointer;
             z-index: 40;
           }
+          .gbtac-inpanel-close {
+            display: flex !important;
+          }
           .gbtac-sidebar {
             transform: translateX(-100%);
             transition: transform 0.2s ease;
             width: 240px !important;
+            padding-top: calc(20px + env(safe-area-inset-top)) !important;
           }
           .gbtac-sidebar.open {
             transform: translateX(0);
           }
-          .gbtac-backdrop.open, .gbtac-backdrop {
+          .gbtac-backdrop.open {
             display: block;
-          }
-          .gbtac-topbar-wrap, .gbtac-main {
-            left: 0 !important;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 20;
           }
           .gbtac-main {
-            padding: 20px 16px !important;
+            left: 0 !important;
+            top: env(safe-area-inset-top) !important;
+            padding: 64px 16px 20px !important;
           }
         }
       `}</style>

@@ -15,6 +15,7 @@ export default function ThemeToggle() {
         e.stopPropagation();
         setTheme(theme === 'light' ? 'dark' : 'light');
       }}
+      aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
       style={{
         background: 'none',
         border: '1px solid var(--border)',
@@ -23,9 +24,13 @@ export default function ThemeToggle() {
         fontSize: '13px',
         color: 'var(--text-secondary)',
         cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px',
       }}
     >
-      {theme === 'light' ? ' Dark' : ' Light'}
+      <span aria-hidden="true">{theme === 'light' ? '🌙' : '☀️'}</span>
+      <span className="tt-label">{theme === 'light' ? 'Dark' : 'Light'}</span>
     </button>
   );
 }
