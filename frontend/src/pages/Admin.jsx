@@ -2,9 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../auth/UserContext';
 import { Users, ChevronDown, ChevronUp, UserCheck } from 'lucide-react';
 import PageContainer from '../components/PageContainer';
-import Toggle from '../components/Toggle';
 import Toast from '../components/Toast';
-import { fetchAdminSummary, fetchUsers, fetchPendingUsers, updateUser, approveUser, denyUser } from '../services/adminService';
 import { useMsal } from '@azure/msal-react';
 import {
   fetchAdminSummary,
@@ -12,6 +10,7 @@ import {
   fetchPendingUsers,
   updateUser,
   approveUser,
+  denyUser,
 } from '../services/adminService';
 
 // Loading skeleton for the KPI cards, shown while summary is still null
