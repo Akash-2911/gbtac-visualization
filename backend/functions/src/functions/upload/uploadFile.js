@@ -3,6 +3,8 @@ const { checkAuth } = require("../../../shared/authMiddleware");
 const { uploadFileToBlob } = require("../../../shared/blobStorage");
 const { queueUploadMessage } = require("../../../shared/serviceBusQueue");
 
+const VALID_DATASET_TYPES = ["greenhouse", "solar", "weather"];
+
 app.http("uploadFile", {
   methods: ["POST"],
   authLevel: "anonymous", // access control handled by checkAuth below
@@ -37,6 +39,22 @@ app.http("uploadFile", {
       const arrayBuffer = await file.arrayBuffer();
       const fileBuffer = Buffer.from(arrayBuffer);
 
+      // Step 2b: read the dataset type the user picked in the UI dropdown.
+      // Normalized to lowercase to match DATASET_CONFIGS keys in
+      // processUpload.js. If provided, this takes priority over filename
+      // detection there, since the user explicitly told us what it is.
+      const dataTypeRaw = formData.get("dataType");
+      const dataType = dataTypeRaw ? String(dataTypeRaw).toLowerCase() : null;
+
+      if (dataType && !VALID_DATASET_TYPES.includes(dataType)) {
+        return {
+          status: 400,
+          jsonBody: {
+            error: `Invalid dataType '${dataTypeRaw}'. Must be one of: ${VALID_DATASET_TYPES.join(", ")}.`,
+          },
+        };
+      }
+
       // Step 3: save the raw file to Blob Storage
       const { blobName, blobUrl } = await uploadFileToBlob(fileBuffer, fileName);
 
@@ -45,6 +63,7 @@ app.http("uploadFile", {
         blobName,
         blobUrl,
         originalFileName: fileName,
+        dataType,
         uploadedBy: user.oid || user.sub, // unique user id from the token
         uploadedAt: new Date().toISOString(),
       });
