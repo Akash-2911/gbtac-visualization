@@ -12,8 +12,8 @@
 
 const { app } = require("@azure/functions");
 const axios = require("axios");
-const { getPowerBiAccessToken } = require("../../shared/powerbiAuth");
-const { checkAuth } = require("../../shared/authMiddleware");
+const { getPowerBiAccessToken } = require("../../../shared/powerbiAuth");
+const { checkAuth } = require("../../../shared/authMiddleware");
 
 app.http("powerbiToken", {
   methods: ["GET"],

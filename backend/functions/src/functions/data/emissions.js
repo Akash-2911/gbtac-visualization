@@ -1,6 +1,6 @@
 const { app } = require("@azure/functions");
-const { getPool, sql } = require("../../shared/sqlClient");
-const { checkAuth } = require("../../shared/authMiddleware");
+const { getPool, sql } = require("../../../shared/sqlClient");
+const { checkAuth } = require("../../../shared/authMiddleware");
 
 app.http("emissions", {
   methods: ["GET"],

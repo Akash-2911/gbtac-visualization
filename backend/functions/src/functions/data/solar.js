@@ -1,11 +1,11 @@
 const { app } = require("@azure/functions");
-const { getPool, sql } = require("../../shared/sqlClient");
-const { checkAuth } = require("../../shared/authMiddleware");
+const { getPool, sql } = require("../../../shared/sqlClient");
+const { checkAuth } = require("../../../shared/authMiddleware");
 
-app.http("weather", {
+app.http("solar", {
   methods: ["GET"],
   authLevel: "anonymous",
-  route: "weather",
+  route: "solar",
   handler: async (request, context) => {
     try {
       const user = await checkAuth(request, ["Viewer", "Staff", "Admin", "SuperAdmin"]);
@@ -22,9 +22,9 @@ app.http("weather", {
         .input("fromDate", sql.Date, from)
         .input("toDate", sql.Date, to)
         .query(`
-          SELECT reading_date, avg_temp_c, min_temp_c, max_temp_c,
-                 avg_humidity_pct, total_precip_mm
-          FROM vw_daily_weather_summary
+          SELECT reading_date, collector1_kwh, collector2_kwh,
+                 avg_sunlight_wm2, peak_sunlight_wm2, reading_count
+          FROM vw_daily_solar_summary
           WHERE site_id = @siteId
             AND reading_date BETWEEN @fromDate AND @toDate
           ORDER BY reading_date ASC
@@ -32,22 +32,24 @@ app.http("weather", {
 
       const dailyRecords = result.recordset.map((r) => ({
         date: r.reading_date,
-        avgTempC: r.avg_temp_c,
-        minTempC: r.min_temp_c,
-        maxTempC: r.max_temp_c,
-        avgHumidityPct: r.avg_humidity_pct,
-        totalPrecipMm: r.total_precip_mm,
+        collector1Kwh: r.collector1_kwh,
+        collector2Kwh: r.collector2_kwh,
+        totalKwh: (r.collector1_kwh || 0) + (r.collector2_kwh || 0),
+        avgSunlightWm2: r.avg_sunlight_wm2,
+        peakSunlightWm2: r.peak_sunlight_wm2,
       }));
+
+      const totalKwh = dailyRecords.reduce((sum, r) => sum + r.totalKwh, 0);
 
       return {
         status: 200,
-        jsonBody: { siteId, from, to, dailyRecords },
+        jsonBody: { siteId, from, to, totalKwh, dailyRecords },
       };
     } catch (err) {
-      context.error("Weather endpoint failed:", err.message);
+      context.error("Solar endpoint failed:", err.message);
       return {
         status: err.status || 500,
-        jsonBody: { error: err.message || "Failed to fetch weather data" },
+        jsonBody: { error: err.message || "Failed to fetch solar data" },
       };
     }
   },

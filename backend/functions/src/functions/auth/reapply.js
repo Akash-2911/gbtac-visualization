@@ -1,6 +1,6 @@
 const { app } = require("@azure/functions");
-const { getAuthenticatedUser } = require("../../shared/authMiddleware");
-const { getPool, sql } = require("../../shared/sqlClient");
+const { getAuthenticatedUser } = require("../../../shared/authMiddleware");
+const { getPool, sql } = require("../../../shared/sqlClient");
 
 // POST /reapply
 // Self-service: a denied user can resubmit their own request, putting
