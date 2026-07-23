@@ -54,9 +54,6 @@ export default function Overview() {
       {/* Render directly inside the layout flow */}
 
   <PowerBIReport reportKey="overview" />
-<ReportCard>
-        <PowerBIReport reportKey="weather" />
-      </ReportCard>
     </PageContainer>
   );
 }
