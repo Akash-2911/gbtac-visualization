@@ -1,4 +1,5 @@
 import { authFetch } from './apiClient';
+import { USER_STATUS } from '../constants/roles';
 
 export function fetchAdminSummary() {
   return authFetch('/dashboardSummary').then((data) => {
@@ -72,7 +73,7 @@ export function updateUser(id, changes) {
 }
 
 export function denyUser(id) {
-  return updateUser(id, { status: 'denied' });
+  return updateUser(id, { status: USER_STATUS.DENIED });
 }
 
 export function reapplyAccess() {
@@ -80,7 +81,7 @@ export function reapplyAccess() {
 }
 
 export function approveUser(id, role) {
-  return updateUser(id, { status: 'active', role });
+  return updateUser(id, { status: USER_STATUS.ACTIVE, role });
 }
 
 // New: actual file upload, multipart form data, no Content-Type header

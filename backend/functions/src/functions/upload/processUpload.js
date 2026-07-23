@@ -35,6 +35,7 @@ const { BlobServiceClient } = require("@azure/storage-blob");
 const ExcelJS = require("exceljs");
 const sql = require("mssql");
 const { Readable } = require("stream");
+const { DEFAULT_SITE_ID } = require("../../../shared/siteAccess");
 
 // ─────────────────────────────────────────────
 // SQL CONFIG — uses managed identity in Azure,
@@ -53,7 +54,8 @@ const sqlConfig = {
   },
 };
 
-const SITE_ID  = 1;
+const SITE_ID  = DEFAULT_SITE_ID;
+// Must match the client-side check in frontend/src/pages/Upload.jsx
 const MAX_MB   = 100;
 const BATCH_SIZE = 500;
 

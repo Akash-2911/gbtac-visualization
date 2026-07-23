@@ -2,6 +2,8 @@ const { app } = require("@azure/functions");
 const { getPool, sql } = require("../../../shared/sqlClient");
 const { checkAuth } = require("../../../shared/authMiddleware");
 const { checkRateLimit } = require("../../../shared/rateLimiter");
+const { DEFAULT_SITE_ID } = require("../../../shared/siteAccess");
+const { ROLES } = require("../../../shared/roles");
 
 const SYSTEM_PROMPT = `You are a data chat assistant for the GBTAC energy dashboard.
 
@@ -30,7 +32,7 @@ app.http("aiChat", {
   route: "ai/chat",
   handler: async (request, context) => {
     try {
-      const user = await checkAuth(request, ["Staff", "Admin", "SuperAdmin"]);
+      const user = await checkAuth(request, [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
       checkRateLimit(user.oid, 10, 60000);
 
       const body = await request.json();
@@ -49,7 +51,7 @@ app.http("aiChat", {
         };
       }
 
-      const siteId = "1";
+      const siteId = DEFAULT_SITE_ID;
       const pool = await getPool();
       const energySumExpr = ENERGY_COLUMNS.join(" + ");
 

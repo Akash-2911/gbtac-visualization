@@ -13,6 +13,7 @@
 
 const { app } = require("@azure/functions");
 const { checkAuth } = require("../../../shared/authMiddleware");
+const { ROLES } = require("../../../shared/roles");
 const sql = require("mssql");
 
 // SQL connection config — reads from environment variables set in Azure Function App
@@ -35,7 +36,7 @@ app.http("deleteUpload", {
   handler: async (request, context) => {
     try {
       // Step 1: verify caller is SuperAdmin — only role allowed to delete data
-      const user = await checkAuth(request, ["SuperAdmin"]);
+      const user = await checkAuth(request, [ROLES.SUPER_ADMIN]);
 
       // Step 2: get the batch ID from the route
       const batchId = parseInt(request.params.id);

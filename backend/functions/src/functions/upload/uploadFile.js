@@ -2,6 +2,7 @@ const { app } = require("@azure/functions");
 const { checkAuth } = require("../../../shared/authMiddleware");
 const { uploadFileToBlob } = require("../../../shared/blobStorage");
 const { queueUploadMessage } = require("../../../shared/serviceBusQueue");
+const { ROLES } = require("../../../shared/roles");
 
 const VALID_DATASET_TYPES = ["greenhouse", "solar", "weather"];
 
@@ -12,13 +13,13 @@ app.http("uploadFile", {
   handler: async (request, context) => {
     try {
 // Step 1: verify caller is authenticated and has permission to upload
-      const user = await checkAuth(request, ["Admin", "SuperAdmin"]);
+      const user = await checkAuth(request, [ROLES.ADMIN, ROLES.SUPER_ADMIN]);
 
       // SuperAdmin can always upload. Admin can only upload if their
       // can_upload flag is set by a SuperAdmin, this is the actual
       // enforcement of Maeric's per-admin upload permission request,
       // not just a UI toggle.
-      if (user.role === "Admin" && !user.can_upload) {
+      if (user.role === ROLES.ADMIN && !user.can_upload) {
         const err = new Error("You do not have upload permission. Contact a SuperAdmin.");
         err.status = 403;
         throw err;

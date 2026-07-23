@@ -18,6 +18,7 @@ import {
   UploadCloud,
 } from 'lucide-react';
 import { useTheme } from '../components/ThemeContext';
+import { ROLES } from '../constants/roles';
 
 // Each item can declare allowedRoles; omitted means visible to everyone
 // signed in. Filtered per-render based on the real database role.
@@ -42,15 +43,15 @@ function getNavGroups(role) {
           label: 'AI Assistant',
           icon: Sparkles,
           beta: true,
-          allowedRoles: ['Staff', 'Admin', 'SuperAdmin'],
+          allowedRoles: [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN],
         },
       ],
     },
     {
       label: 'MANAGEMENT',
       items: [
-        { path: '/admin', label: 'Admin', icon: ShieldCheck, end: true, allowedRoles: ['Admin', 'SuperAdmin'] },
-        { path: '/admin/upload', label: 'Data Upload', icon: UploadCloud, allowedRoles: ['Admin', 'SuperAdmin'] },
+        { path: '/admin', label: 'Admin', icon: ShieldCheck, end: true, allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN] },
+        { path: '/admin/upload', label: 'Data Upload', icon: UploadCloud, allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN] },
         { path: '/settings', label: 'Settings', icon: SettingsIcon },
       ],
     },
@@ -83,7 +84,7 @@ export default function Layout() {
 // Real role read from the database via /me (shared UserContext), not
   // the JWT token, since SuperAdmin approval only updates the database.
   const { user } = useUser();
-  const role = user?.role || 'Viewer';
+  const role = user?.role || ROLES.VIEWER;
 
   const navGroups = getNavGroups(role);
 

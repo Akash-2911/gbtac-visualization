@@ -1,6 +1,7 @@
 const { app } = require("@azure/functions");
 const { getAuthenticatedUser } = require("../../../shared/authMiddleware");
 const { getPool, sql } = require("../../../shared/sqlClient");
+const { USER_STATUS } = require("../../../shared/roles");
 
 // POST /reapply
 // Self-service: a denied user can resubmit their own request, putting
@@ -14,7 +15,7 @@ app.http("reapply", {
     try {
       const user = await getAuthenticatedUser(request);
 
-      if (user.status !== "denied") {
+      if (user.status !== USER_STATUS.DENIED) {
         return {
           status: 400,
           jsonBody: { error: "Only denied accounts can resubmit a request." },
@@ -24,7 +25,7 @@ app.http("reapply", {
       const pool = await getPool();
       await pool.request()
         .input("userId", sql.Int, user.user_id)
-        .query(`UPDATE users SET status = 'pending' WHERE user_id = @userId`);
+        .query(`UPDATE users SET status = '${USER_STATUS.PENDING}' WHERE user_id = @userId`);
 
       return {
         status: 200,

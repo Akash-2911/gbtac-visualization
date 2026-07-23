@@ -16,6 +16,8 @@
 
 const { app } = require("@azure/functions");
 const { checkAuth } = require("../../../shared/authMiddleware");
+const { DEFAULT_SITE_ID } = require("../../../shared/siteAccess");
+const { ROLES } = require("../../../shared/roles");
 const sql = require("mssql");
 
 const sqlConfig = {
@@ -32,7 +34,7 @@ app.http("getAdminSummary", {
   handler: async (request, context) => {
     try {
       // Only Admin and SuperAdmin can view admin summary
-      await checkAuth(request, ["Admin", "SuperAdmin"]);
+      await checkAuth(request, [ROLES.ADMIN, ROLES.SUPER_ADMIN]);
 
       const pool = await sql.connect(sqlConfig);
 
@@ -51,7 +53,10 @@ app.http("getAdminSummary", {
       `);
 
       // ── Row counts per readings table ────────────────────────
-      const rowCounts = await pool.request().query(`
+      const rowCounts = await pool
+        .request()
+        .input("siteId", sql.Int, DEFAULT_SITE_ID)
+        .query(`
         SELECT
           'greenhouse' AS dataset,
           COUNT(*)     AS total_rows,
@@ -59,7 +64,7 @@ app.http("getAdminSummary", {
           SUM(CASE WHEN data_quality = 'negative_kw' THEN 1 ELSE 0 END) AS flagged_rows,
           MIN(timestamp_utc) AS earliest_reading,
           MAX(timestamp_utc) AS latest_reading
-        FROM greenhouse_readings WHERE site_id = 1
+        FROM greenhouse_readings WHERE site_id = @siteId
         UNION ALL
         SELECT
           'solar',
@@ -68,7 +73,7 @@ app.http("getAdminSummary", {
           SUM(CASE WHEN data_quality = 'alarm' THEN 1 ELSE 0 END),
           MIN(timestamp_utc),
           MAX(timestamp_utc)
-        FROM solar_readings WHERE site_id = 1
+        FROM solar_readings WHERE site_id = @siteId
         UNION ALL
         SELECT
           'weather',
@@ -77,17 +82,17 @@ app.http("getAdminSummary", {
           0,
           MIN(timestamp_utc),
           MAX(timestamp_utc)
-        FROM weather_readings WHERE site_id = 1
+        FROM weather_readings WHERE site_id = @siteId
       `);
 
       // ── User counts by role ──────────────────────────────────
       const userSummary = await pool.request().query(`
         SELECT
           COUNT(*)  AS total_users,
-          SUM(CASE WHEN role = 'SuperAdmin' AND active = 1 THEN 1 ELSE 0 END) AS super_admins,
-          SUM(CASE WHEN role = 'Admin'      AND active = 1 THEN 1 ELSE 0 END) AS admins,
-          SUM(CASE WHEN role = 'Staff'      AND active = 1 THEN 1 ELSE 0 END) AS staff,
-          SUM(CASE WHEN role = 'Viewer'     AND active = 1 THEN 1 ELSE 0 END) AS viewers,
+          SUM(CASE WHEN role = '${ROLES.SUPER_ADMIN}' AND active = 1 THEN 1 ELSE 0 END) AS super_admins,
+          SUM(CASE WHEN role = '${ROLES.ADMIN}'       AND active = 1 THEN 1 ELSE 0 END) AS admins,
+          SUM(CASE WHEN role = '${ROLES.STAFF}'       AND active = 1 THEN 1 ELSE 0 END) AS staff,
+          SUM(CASE WHEN role = '${ROLES.VIEWER}'      AND active = 1 THEN 1 ELSE 0 END) AS viewers,
           SUM(CASE WHEN active = 0 THEN 1 ELSE 0 END) AS inactive_users
         FROM users
       `);

@@ -4,6 +4,7 @@ import { useMsal } from '@azure/msal-react';
 import PageContainer from '../components/PageContainer';
 import Toggle from '../components/Toggle';
 import Toast from '../components/Toast';
+import { ROLES } from '../constants/roles';
 
 const FONT_SCALES = [
   { value: 'small', label: 'Small' },
@@ -21,7 +22,7 @@ export default function Settings() {
 // Real role read from the database via /me (shared UserContext), not
   // the JWT token, since SuperAdmin approval only updates the database.
   const { user } = useUser();
-  const role = user?.role || 'Viewer';
+  const role = user?.role || ROLES.VIEWER;
 
   // Accessibility state — moved here from Admin.jsx, since individual
   // accessibility preferences are personal, not org-wide.

@@ -2,6 +2,7 @@ const { app } = require("@azure/functions");
 const { getPool, sql } = require("../../../shared/sqlClient");
 const { checkAuth } = require("../../../shared/authMiddleware");
 const { resolveSiteId } = require("../../../shared/siteAccess");
+const { ROLES } = require("../../../shared/roles");
 
 // Appliance columns that make up "Total Energy Used" - mains_* is
 // intentionally excluded (unreliable sensor, confirmed with client).
@@ -19,7 +20,7 @@ app.http("summary", {
   route: "summary",
   handler: async (request, context) => {
     try {
-      const user = await checkAuth(request, ["Viewer", "Staff", "Admin", "SuperAdmin"]);
+      const user = await checkAuth(request, [ROLES.VIEWER, ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
 
       const siteId = resolveSiteId(request);
       const from = request.query.get("from") || "2000-01-01";
