@@ -12,7 +12,6 @@ import Compare from './pages/Compare';
 import Emissions from './pages/Emissions';
 import AIAssistant from './pages/AIAssistant';
 import Settings from './pages/Settings';
-import DataEntry from './pages/DataEntry';
 import Admin from './pages/Admin';
 import Upload from './pages/Upload';
 import { ThemeProvider } from './components/ThemeContext';
@@ -47,14 +46,6 @@ function App() {
                 }
               />
               <Route path="settings" element={<Settings />} />
-              <Route
-                path="admin/data-entry"
-                element={
-                  <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin']}>
-                    <DataEntry />
-                  </ProtectedRoute>
-                }
-              />
               <Route
                 path="admin/upload"
                 element={

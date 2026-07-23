@@ -23,6 +23,7 @@ const { app } = require("@azure/functions");
 const { getPool, sql } = require("../../../shared/sqlClient");
 const { checkAuth } = require("../../../shared/authMiddleware");
 const { checkRateLimit } = require("../../../shared/rateLimiter");
+const { resolveSiteId } = require("../../../shared/siteAccess");
 
 // Energy columns — same as aiSummary.js and aiChat.js
 const ENERGY_COLUMNS = [
@@ -52,7 +53,7 @@ app.http("aiPredict", {
       const user = await checkAuth(request, ["Staff", "Admin", "SuperAdmin"]);
       checkRateLimit(user.oid, 10, 60000);
 
-      const siteId = parseInt(request.query.get("site_id") || "1");
+      const siteId = resolveSiteId(request);
 
       const pool = await getPool();
       const energySumExpr = ENERGY_COLUMNS.join(" + ");
