@@ -66,43 +66,43 @@ app.http("deleteUpload", {
 
       const batch = checkResult.recordset[0];
 
-      // Step 5: delete all data rows associated with this batch
-      // Delete from the correct table based on data_type
-      let rowsDeleted = 0;
+      // Step 5: delete data rows + the upload_batches record atomically, so a
+      // crash between the two steps can't leave the audit row out of sync with
+      // whether the data actually still exists.
+      const dataTable =
+        batch.data_type === "greenhouse"
+          ? "greenhouse_readings"
+          : batch.data_type === "solar"
+          ? "solar_readings"
+          : batch.data_type === "weather"
+          ? "weather_readings"
+          : null;
 
-      if (batch.data_type === "greenhouse") {
-        const deleteRows = await pool
+      let rowsDeleted = 0;
+      const transaction = new sql.Transaction(pool);
+      await transaction.begin();
+
+      try {
+        if (dataTable) {
+          const deleteRows = await transaction
+            .request()
+            .input("batchId", sql.Int, batchId)
+            .query(`DELETE FROM ${dataTable} WHERE upload_batch_id = @batchId`);
+          rowsDeleted = deleteRows.rowsAffected[0];
+        }
+
+        await transaction
           .request()
           .input("batchId", sql.Int, batchId)
-          .query(
-            "DELETE FROM greenhouse_readings WHERE upload_batch_id = @batchId"
-          );
-        rowsDeleted = deleteRows.rowsAffected[0];
-      } else if (batch.data_type === "solar") {
-        const deleteRows = await pool
-          .request()
-          .input("batchId", sql.Int, batchId)
-          .query(
-            "DELETE FROM solar_readings WHERE upload_batch_id = @batchId"
-          );
-        rowsDeleted = deleteRows.rowsAffected[0];
-      } else if (batch.data_type === "weather") {
-        const deleteRows = await pool
-          .request()
-          .input("batchId", sql.Int, batchId)
-          .query(
-            "DELETE FROM weather_readings WHERE upload_batch_id = @batchId"
-          );
-        rowsDeleted = deleteRows.rowsAffected[0];
+          .query("DELETE FROM upload_batches WHERE batch_id = @batchId");
+
+        await transaction.commit();
+      } catch (txErr) {
+        await transaction.rollback();
+        throw txErr;
       }
 
-      // Step 6: delete the upload_batches record itself
-      await pool
-        .request()
-        .input("batchId", sql.Int, batchId)
-        .query("DELETE FROM upload_batches WHERE batch_id = @batchId");
-
-      // Step 7: log who deleted what (context.log goes to Application Insights)
+      // Step 6: log who deleted what (context.log goes to Application Insights)
       context.log(
         `SuperAdmin ${user.preferred_username || user.oid} deleted batch ${batchId} ` +
         `(${batch.file_name}, ${batch.data_type}, ${rowsDeleted} rows removed)`

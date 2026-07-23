@@ -84,10 +84,8 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* Appearance section removed per instruction — dark mode toggle no
-          longer lives here or in the sidebar. Flag: this leaves the app
-          with no remaining UI control to switch themes, unless
-          ThemeToggle.jsx is still rendered somewhere else. */}
+      {/* Appearance section removed per instruction — dark mode toggle lives
+          in the sidebar (Layout.jsx) instead. */}
 
       {/* Accessibility — moved from Admin.jsx per the settings/admin research
           pass: individual accessibility preferences belong in personal

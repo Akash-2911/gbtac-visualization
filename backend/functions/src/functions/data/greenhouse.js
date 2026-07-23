@@ -1,6 +1,7 @@
 const { app } = require("@azure/functions");
 const { getPool, sql } = require("../../../shared/sqlClient");
 const { checkAuth } = require("../../../shared/authMiddleware");
+const { resolveSiteId } = require("../../../shared/siteAccess");
 
 const ENERGY_COLUMNS = [
   "chiller_pa_kwh", "chiller_pb_kwh",
@@ -18,7 +19,7 @@ app.http("greenhouse", {
     try {
       const user = await checkAuth(request, ["Viewer", "Staff", "Admin", "SuperAdmin"]);
 
-      const siteId = request.query.get("site_id") || "1";
+      const siteId = resolveSiteId(request);
       const from = request.query.get("from") || "2000-01-01";
       const to = request.query.get("to") || "2100-01-01";
 
