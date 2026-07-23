@@ -3,14 +3,16 @@ import { PowerBIEmbed } from 'powerbi-client-react';
 import { models } from 'powerbi-client';
 import { fetchEmbedToken } from '../services/embedTokenService';
 
+const NEW_REPORT_ID = '84ba8dbd-1617-4315-b03e-37ef3be4e905';
+
 const REPORT_MAP = {
-  weather: { reportId: '8c43f0fe-6963-4fe2-afd1-c1429ea5a76a', pageId: 'f2d890f1552c7cdec936' },
-  overview: { reportId: '8c43f0fe-6963-4fe2-afd1-c1429ea5a76a', pageId: '0a43f601edddf2ea58d8' },
-  greenhouseEnergy: { reportId: 'd539932b-add1-4c6b-ad19-7e4ea08ee044', pageId: '9fb111ee357b4627a3b5' },
-  energyVsSolar: { reportId: 'd539932b-add1-4c6b-ad19-7e4ea08ee044', pageId: 'd9da5989d76e7e210ca3' },
-  energySolarBreakdown: { reportId: 'd539932b-add1-4c6b-ad19-7e4ea08ee044', pageId: '549f57835ef0a0dd3d84' },
-  solarGeneration: { reportId: '1fba11af-ee34-40e1-8eae-f82945c84f90', pageId: 'b21899854ca5981473a0' },
- emissions: { reportId: '8c43f0fe-6963-4fe2-afd1-c1429ea5a76a', pageId: 'fb50e36d7fa37a453f2f' },
+  overview: { reportId: NEW_REPORT_ID, pageId: 'ae24fc3a0479d5e60727' },
+  greenhouseEnergy: { reportId: NEW_REPORT_ID, pageId: 'ee587a4a0d8d49fcca10' }, // Energy page
+  solarGeneration: { reportId: NEW_REPORT_ID, pageId: '8f9a0b1c2d3e4f5a6b7d' }, // Solar page
+  weather: { reportId: NEW_REPORT_ID, pageId: '8747da8341ec9213795a' },
+  emissions: { reportId: NEW_REPORT_ID, pageId: '9f9fda1b2c3d4e5f6a7c' },
+  energyVsSolar: { reportId: NEW_REPORT_ID, pageId: '6d7e8f9a0b1c2d3e4f5a' },
+  energySolarBreakdown: { reportId: NEW_REPORT_ID, pageId: '7e8f9a0b1c2d3e4f5a6b' }, // Compare - Breakdown
 };
 
 export default function PowerBIReport({ reportKey }) {
