@@ -15,6 +15,7 @@ import Settings from './pages/Settings';
 import Admin from './pages/Admin';
 import Upload from './pages/Upload';
 import { ThemeProvider } from './components/ThemeContext';
+import { ROLES } from './constants/roles';
 
 function App() {
   return (
@@ -40,7 +41,7 @@ function App() {
               <Route
                 path="ai-assistant"
                 element={
-                  <ProtectedRoute allowedRoles={['Staff', 'Admin', 'SuperAdmin']}>
+                  <ProtectedRoute allowedRoles={[ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN]}>
                     <AIAssistant />
                   </ProtectedRoute>
                 }
@@ -49,7 +50,7 @@ function App() {
               <Route
                 path="admin/upload"
                 element={
-                  <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin']}>
+                  <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}>
                     <Upload />
                   </ProtectedRoute>
                 }
@@ -57,7 +58,7 @@ function App() {
               <Route
                 path="admin"
                 element={
-                  <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin']}>
+                  <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}>
                     <Admin />
                   </ProtectedRoute>
                 }

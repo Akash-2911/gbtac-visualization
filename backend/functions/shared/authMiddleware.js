@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const jwksClient = require("jwks-rsa");
 const { getPool, sql } = require("./sqlClient");
+const { ROLES, USER_STATUS } = require("./roles");
 
 const tenantId = process.env.AUTH_TENANT_ID;
 const clientId = process.env.AUTH_CLIENT_ID;
@@ -95,7 +96,7 @@ async function getOrCreateDbUser(decodedToken) {
     .input("entraOid", sql.NVarChar, entraOid)
     .query(`
       INSERT INTO users (display_name, email, role, active, status, can_upload, entra_oid)
-      VALUES (@displayName, @email, 'Viewer', 0, 'pending', 0, @entraOid)
+      VALUES (@displayName, @email, '${ROLES.VIEWER}', 0, '${USER_STATUS.PENDING}', 0, @entraOid)
     `);
 
   const created = await pool.request()
@@ -151,13 +152,13 @@ async function getAuthenticatedUser(request) {
 async function checkAuth(request, allowedRoles = null) {
   const user = await getAuthenticatedUser(request);
 
-  if (user.status === "pending") {
+  if (user.status === USER_STATUS.PENDING) {
     const err = new Error("Your account is pending SuperAdmin approval.");
     err.status = 428;
     throw err;
   }
 
-  if (user.status === "denied") {
+  if (user.status === USER_STATUS.DENIED) {
     const err = new Error("Your access request was denied.");
     err.status = 423;
     throw err;

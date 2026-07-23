@@ -1,7 +1,8 @@
 // Sites the caller is allowed to query via the `site_id` query param.
 // Today there's only one site (Aldersyde); this is the single place to
 // extend once a second site (and a real user-to-site access model) exists.
-const VALID_SITE_IDS = new Set([1]);
+const DEFAULT_SITE_ID = 1;
+const VALID_SITE_IDS = new Set([DEFAULT_SITE_ID]);
 
 /**
  * Reads and validates `site_id` from the request query string.
@@ -13,7 +14,7 @@ function resolveSiteId(request) {
   const raw = request.query.get("site_id");
 
   if (raw === null || raw === undefined || raw === "") {
-    return 1;
+    return DEFAULT_SITE_ID;
   }
 
   const siteId = parseInt(raw, 10);
@@ -26,4 +27,4 @@ function resolveSiteId(request) {
   return siteId;
 }
 
-module.exports = { resolveSiteId, VALID_SITE_IDS };
+module.exports = { resolveSiteId, VALID_SITE_IDS, DEFAULT_SITE_ID };

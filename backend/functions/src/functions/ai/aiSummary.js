@@ -3,6 +3,7 @@ const { getPool, sql } = require("../../../shared/sqlClient");
 const { checkAuth } = require("../../../shared/authMiddleware");
 const { checkRateLimit } = require("../../../shared/rateLimiter");
 const { resolveSiteId } = require("../../../shared/siteAccess");
+const { ROLES } = require("../../../shared/roles");
 
 const SYSTEM_PROMPT = `You are a data insight assistant for the GBTAC energy dashboard.
 
@@ -30,7 +31,7 @@ app.http("aiSummary", {
   route: "ai/summary",
   handler: async (request, context) => {
     try {
-      const user = await checkAuth(request, ["Staff", "Admin", "SuperAdmin"]);
+      const user = await checkAuth(request, [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
       checkRateLimit(user.oid, 10, 60000);
 
       const siteId = resolveSiteId(request);

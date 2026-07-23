@@ -17,6 +17,7 @@
 
 const { app } = require("@azure/functions");
 const { checkAuth } = require("../../../shared/authMiddleware");
+const { ROLES } = require("../../../shared/roles");
 const sql = require("mssql");
 
 const sqlConfig = {
@@ -38,7 +39,7 @@ app.http("getUploadHistory", {
   handler: async (request, context) => {
     try {
       // Step 1: verify caller is Admin or SuperAdmin
-      await checkAuth(request, ["Admin", "SuperAdmin"]);
+      await checkAuth(request, [ROLES.ADMIN, ROLES.SUPER_ADMIN]);
 
       // Step 2: parse query params
       const page   = Math.max(1, parseInt(request.query.get("page")  || "1"));
