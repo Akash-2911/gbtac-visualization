@@ -95,7 +95,7 @@ export default function ForecastChart({ title = 'Energy Consumption Forecast' })
           <Line
             type="monotone"
             dataKey="actual_kwh"
-            stroke="#333333"
+            stroke="var(--text-primary)"
             strokeWidth={2}
             dot={false}
             connectNulls={false}
