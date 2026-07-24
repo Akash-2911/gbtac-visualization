@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles } from 'lucide-react';
 import PageContainer from '../components/PageContainer';
 import { postAiChat } from '../services/aiService';
+import { highlightMetrics } from '../components/highlightMetrics';
 
 export default function AIAssistant() {
   const [messages, setMessages] = useState([]);
@@ -77,7 +78,7 @@ export default function AIAssistant() {
           {messages.map((msg, i) => {
             if (msg.role === 'user') {
               return (
-                <div key={i} style={{ alignSelf: 'flex-end', maxWidth: '75%' }}>
+                <div key={i} className="gbtac-fade-in" style={{ alignSelf: 'flex-end', maxWidth: '75%' }}>
                   <div
                     style={{
                       background: 'var(--accent-blue)',
@@ -94,7 +95,7 @@ export default function AIAssistant() {
             }
             if (msg.role === 'error') {
               return (
-                <div key={i} style={{ alignSelf: 'flex-start', maxWidth: '75%' }}>
+                <div key={i} className="gbtac-fade-in" style={{ alignSelf: 'flex-start', maxWidth: '75%' }}>
                   <div
                     style={{
                       background: 'var(--status-red-bg)',
@@ -110,7 +111,7 @@ export default function AIAssistant() {
               );
             }
             return (
-              <div key={i} style={{ alignSelf: 'flex-start', maxWidth: '75%' }}>
+              <div key={i} className="gbtac-fade-in" style={{ alignSelf: 'flex-start', maxWidth: '75%' }}>
                 <div
                   style={{
                     background: 'var(--bg)',
@@ -119,14 +120,14 @@ export default function AIAssistant() {
                     fontSize: '14px',
                   }}
                 >
-                  {msg.content}
+                  {highlightMetrics(msg.content)}
                 </div>
               </div>
             );
           })}
 
           {isSending && (
-            <div style={{ alignSelf: 'flex-start', maxWidth: '75%' }}>
+            <div className="gbtac-fade-in" style={{ alignSelf: 'flex-start', maxWidth: '75%' }}>
               <div
                 style={{
                   background: 'var(--bg)',
@@ -166,6 +167,7 @@ export default function AIAssistant() {
           <button
             onClick={handleSend}
             disabled={isSending || !input.trim()}
+            className="gbtac-btn-fx"
             style={{
               display: 'flex',
               alignItems: 'center',

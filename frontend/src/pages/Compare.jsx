@@ -4,6 +4,7 @@ import PowerBIReport from '../components/PowerBIReport';
 import PageContainer from '../components/PageContainer';
 import ReportCard from '../components/ReportCard';
 import { fetchAiSummary } from '../services/aiService';
+import { highlightMetrics } from '../components/highlightMetrics';
 
 const views = [
   { key: 'energyVsSolar', label: 'Energy vs Solar' },
@@ -51,7 +52,11 @@ export default function Compare() {
       }
       return <p style={{ margin: 0, fontSize: '13px' }}>Couldn't load AI insight: {insightError.message}</p>;
     }
-    return <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.5 }}>{insight}</p>;
+    return (
+      <p className="gbtac-fade-in" style={{ margin: 0, fontSize: '14px', lineHeight: 1.5 }}>
+        {highlightMetrics(insight, { positive: '#86EFAC', negative: '#FCA5A5' })}
+      </p>
+    );
   };
 
   return (

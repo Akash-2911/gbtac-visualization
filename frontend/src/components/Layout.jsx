@@ -16,6 +16,8 @@ import {
   SunMedium,
   LogOut,
   UploadCloud,
+  Menu,
+  X,
 } from 'lucide-react';
 import { useTheme } from '../components/ThemeContext';
 import { ROLES } from '../constants/roles';
@@ -109,12 +111,12 @@ export default function Layout() {
       {!menuOpen && (
         <button
           type="button"
-          className="gbtac-hamburger"
+          className="gbtac-hamburger gbtac-btn-fx"
           aria-label="Open navigation menu"
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen(true)}
         >
-          ☰
+          <Menu size={18} />
         </button>
       )}
 
@@ -153,21 +155,20 @@ export default function Layout() {
           </div>
           <button
             type="button"
-            className="gbtac-inpanel-close"
+            className="gbtac-inpanel-close gbtac-btn-fx"
             aria-label="Close navigation menu"
             onClick={closeMenu}
             style={{
               display: 'none',
+              alignItems: 'center',
               background: 'none',
               border: 'none',
               color: '#fff',
-              fontSize: '1.125rem',
-              lineHeight: 1,
               cursor: 'pointer',
               padding: '2px 4px',
             }}
           >
-            ✕
+            <X size={18} />
           </button>
         </div>
 
@@ -196,6 +197,7 @@ export default function Layout() {
                         to={item.path}
                         end={item.end}
                         onClick={closeMenu}
+                        className="gbtac-nav-link"
                         style={({ isActive }) => ({
                           display: 'flex',
                           alignItems: 'center',
@@ -207,6 +209,7 @@ export default function Layout() {
                           textDecoration: 'none',
                           fontSize: '0.875rem',
                           fontWeight: isActive ? 600 : 400,
+                          transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease',
                         })}
                       >
                         <Icon size={17} strokeWidth={2} style={{ flexShrink: 0 }} />
@@ -242,6 +245,7 @@ export default function Layout() {
           <button
             type="button"
             onClick={toggleTheme}
+            className="gbtac-sidebar-item-fx"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -274,6 +278,7 @@ export default function Layout() {
               }
             }}
             aria-label="Go to your account settings"
+            className="gbtac-sidebar-item-fx"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -322,6 +327,7 @@ export default function Layout() {
             type="button"
             onClick={handleLogout}
             aria-label="Sign out"
+            className="gbtac-sidebar-item-fx"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -361,7 +367,9 @@ export default function Layout() {
           flexDirection: 'column',
         }}
       >
-        <Outlet />
+        <div key={location.pathname} className="gbtac-fade-in" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <Outlet />
+        </div>
       </main>
 
       <style>{`
@@ -378,6 +386,19 @@ export default function Layout() {
           transition: top 0.15s;
         }
         .skip-link:focus { top: 8px; }
+
+        /* Sidebar hover feedback — --sidebar-hover was defined in theme.css
+           but never actually applied anywhere until now. */
+        .gbtac-sidebar-item-fx {
+          border-radius: 6px;
+          transition: background-color 0.15s ease;
+        }
+        .gbtac-sidebar-item-fx:hover {
+          background-color: var(--sidebar-hover);
+        }
+        .gbtac-nav-link:hover {
+          background-color: var(--sidebar-hover) !important;
+        }
 
         .gbtac-hamburger { display: none; }
         .gbtac-backdrop { display: none; }

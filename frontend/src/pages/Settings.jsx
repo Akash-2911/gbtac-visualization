@@ -118,6 +118,7 @@ export default function Settings() {
                   role="radio"
                   aria-checked={active}
                   onClick={() => changeFontScale(value)}
+                  className="gbtac-btn-fx"
                   style={{
                     padding: '6px 14px',
                     fontSize: '0.8125rem',
@@ -127,6 +128,7 @@ export default function Settings() {
                     border: 'none',
                     borderRight: value !== 'large' ? '1px solid var(--border)' : 'none',
                     cursor: 'pointer',
+                    transition: 'background-color 0.15s ease',
                   }}
                 >
                   {label}

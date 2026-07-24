@@ -21,6 +21,13 @@
  *   - Role must be one of: SuperAdmin, Admin, Staff, Viewer
  *   - Cannot set role to SuperAdmin via API (must be done directly in DB by Akash)
  *   - status must be one of: pending, active
+ *
+ * DELETE /dashboard/users/{id}
+ * Permanently removes a user record. Restricted to SuperAdmin only.
+ * Blocked (409) if the user has any upload_batches rows — uploaded_by_user_id
+ * is a NOT NULL FK with no ON DELETE rule, and upload_batches is the upload
+ * audit trail, so users with upload history must be deactivated instead of
+ * deleted.
  */
 
 const { app } = require("@azure/functions");
@@ -39,7 +46,7 @@ const ALLOWED_ROLES = [ROLES.ADMIN, ROLES.STAFF, ROLES.VIEWER];  // SuperAdmin n
 const ALLOWED_STATUSES = [USER_STATUS.PENDING, USER_STATUS.ACTIVE, USER_STATUS.DENIED];
 
 app.http("updateUser", {
-  methods: ["PATCH"],
+  methods: ["PATCH", "DELETE"],
   authLevel: "anonymous",
   route: "dashboard/users/{id}",
   handler: async (request, context) => {
@@ -53,6 +60,65 @@ app.http("updateUser", {
         return {
           status: 400,
           jsonBody: { error: "Invalid user ID. Must be a number." },
+        };
+      }
+
+      const pool = await sql.connect(sqlConfig);
+
+      // Confirm target user exists
+      const checkResult = await pool.request()
+        .input("userId", sql.Int, targetUserId)
+        .query(`
+          SELECT user_id, display_name, email, role, active, status, entra_oid
+          FROM users WHERE user_id = @userId
+        `);
+
+      if (checkResult.recordset.length === 0) {
+        return {
+          status: 404,
+          jsonBody: { error: `User ${targetUserId} not found.` },
+        };
+      }
+
+      const targetUser = checkResult.recordset[0];
+
+      // Prevent SuperAdmin from modifying themselves
+      const callerOid = caller.oid || caller.sub;
+      if (targetUser.entra_oid === callerOid) {
+        return {
+          status: 403,
+          jsonBody: { error: "You cannot modify your own account." },
+        };
+      }
+
+      if (request.method === "DELETE") {
+        const uploadCount = await pool.request()
+          .input("userId", sql.Int, targetUserId)
+          .query(`SELECT COUNT(*) AS count FROM upload_batches WHERE uploaded_by_user_id = @userId`);
+
+        if (uploadCount.recordset[0].count > 0) {
+          return {
+            status: 409,
+            jsonBody: {
+              error: `${targetUser.display_name} has uploaded files and can't be deleted — deactivate them instead to preserve the upload history.`,
+            },
+          };
+        }
+
+        await pool.request()
+          .input("userId", sql.Int, targetUserId)
+          .query(`DELETE FROM users WHERE user_id = @userId`);
+
+        context.log(
+          `SuperAdmin ${caller.preferred_username || callerOid} deleted user ${targetUserId} (${targetUser.email})`
+        );
+
+        return {
+          status: 200,
+          jsonBody: {
+            message: `User ${targetUser.display_name} deleted successfully.`,
+            deletedBy: caller.preferred_username || callerOid,
+          },
         };
       }
 
@@ -93,34 +159,6 @@ app.http("updateUser", {
         return {
           status: 400,
           jsonBody: { error: `Invalid status '${status}'. Must be one of: ${ALLOWED_STATUSES.join(", ")}.` },
-        };
-      }
-
-      const pool = await sql.connect(sqlConfig);
-
-      // Confirm target user exists
-      const checkResult = await pool.request()
-        .input("userId", sql.Int, targetUserId)
-        .query(`
-          SELECT user_id, display_name, email, role, active, status, entra_oid
-          FROM users WHERE user_id = @userId
-        `);
-
-      if (checkResult.recordset.length === 0) {
-        return {
-          status: 404,
-          jsonBody: { error: `User ${targetUserId} not found.` },
-        };
-      }
-
-      const targetUser = checkResult.recordset[0];
-
-      // Prevent SuperAdmin from modifying themselves
-      const callerOid = caller.oid || caller.sub;
-      if (targetUser.entra_oid === callerOid) {
-        return {
-          status: 403,
-          jsonBody: { error: "You cannot modify your own account." },
         };
       }
 

@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { UploadCloud, CheckCircle2, RotateCw, AlertCircle, Clock, AlertTriangle, Trash2, Lock } from 'lucide-react';
+import { UploadCloud, CheckCircle2, RotateCw, AlertCircle, Clock, AlertTriangle, Trash2, Lock, SearchX } from 'lucide-react';
 import PageContainer from '../components/PageContainer';
 import Toast from '../components/Toast';
-import { fetchUploadHistory, deleteUpload, uploadFile, fetchMe } from '../services/adminService';
+import { fetchUploadHistory, deleteUpload, uploadFile, fetchMe, fetchUploadSettings } from '../services/adminService';
 import { ROLES } from '../constants/roles';
 
 const statusConfig = {
@@ -26,13 +26,25 @@ export default function Upload() {
 
   const canUploadFiles = me?.role === ROLES.SUPER_ADMIN || (me?.role === ROLES.ADMIN && me?.canUpload);
 
+  // SuperAdmin-configurable upload limit (Admin page) — falls back to 100MB
+  // only until the real value loads, so validation is never stricter than
+  // the server's actual limit in the meantime.
+  const [maxUploadMb, setMaxUploadMb] = useState(100);
+  useEffect(() => {
+    fetchUploadSettings().then((s) => setMaxUploadMb(s.maxUploadMb)).catch(() => {});
+  }, []);
+
   const [uploads, setUploads] = useState([]);
   const [error, setError] = useState(null);
   const [dataType, setDataType] = useState('Greenhouse');
   const [isDragging, setIsDragging] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [toastVariant, setToastVariant] = useState('success');
   const [confirmDelete, setConfirmDelete] = useState(null);
-  const showToast = (message) => setToastMessage(message);
+  const showToast = (message, variant = 'success') => {
+    setToastVariant(variant);
+    setToastMessage(message);
+  };
 
   // Draft values bound to the filter inputs — only copied into the "applied"
   // state below when the Apply button is clicked, so typing/selecting
@@ -61,12 +73,13 @@ export default function Upload() {
   const handleFile = async (file) => {
     if (!file) return;
     if (!file.name.match(/\.xlsx?$/i)) {
-      alert('Only .xlsx files are supported.');
+      showToast('Only .xlsx files are supported.', 'error');
       return;
     }
-    // Must match MAX_MB in backend/functions/src/functions/upload/processUpload.js
-    if (file.size > 100 * 1024 * 1024) {
-      alert('File exceeds the 100MB limit.');
+    // Limit is SuperAdmin-configurable (Admin page) — kept in sync with the
+    // server via fetchUploadSettings() above rather than a hardcoded value.
+    if (file.size > maxUploadMb * 1024 * 1024) {
+      showToast(`File exceeds the ${maxUploadMb}MB limit.`, 'error');
       return;
     }
     try {
@@ -74,7 +87,7 @@ export default function Upload() {
       showToast(`"${file.name}" uploaded`);
       load();
     } catch (e) {
-      alert(`Could not upload: ${e.message}`);
+      showToast(`Could not upload: ${e.message}`, 'error');
     }
   };
 
@@ -104,7 +117,7 @@ export default function Upload() {
       showToast(`Deleted "${filename}"`);
       load();
     } catch (e) {
-      alert(`Could not delete: ${e.message}`);
+      showToast(`Could not delete: ${e.message}`, 'error');
       setConfirmDelete(null);
     }
   };
@@ -210,7 +223,7 @@ export default function Upload() {
             >
               <UploadCloud size={28} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
               <p style={{ fontSize: '0.875rem', fontWeight: 600, margin: 0 }}>
-                Drag &amp; drop .xlsx file or click to browse — max 100MB
+                Drag &amp; drop .xlsx file or click to browse — max {maxUploadMb}MB
               </p>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>
                 Supports Excel files containing sensor data.
@@ -249,6 +262,7 @@ export default function Upload() {
               </div>
               <button
                 onClick={() => document.getElementById('gbtac-upload-dropzone-input')?.click()}
+                className="gbtac-btn-fx"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -365,6 +379,7 @@ export default function Upload() {
 
           <button
             onClick={applyFilters}
+            className="gbtac-btn-fx"
             style={{
               padding: '7px 16px',
               borderRadius: '6px',
@@ -382,6 +397,7 @@ export default function Upload() {
           {(filterType !== 'all' || filterStatus !== 'all' || filterFrom || filterTo) && (
             <button
               onClick={clearFilters}
+              className="gbtac-btn-fx"
               style={{
                 padding: '7px 12px',
                 borderRadius: '6px',
@@ -414,14 +430,16 @@ export default function Upload() {
               {uploads.length === 0 && !error && (
                 <tr>
                   <td colSpan={canUploadFiles ? 7 : 6} style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    No uploads yet — files you upload above will appear here.
+                    <UploadCloud size={28} strokeWidth={1.5} style={{ marginBottom: '8px' }} />
+                    <p style={{ margin: 0 }}>No uploads yet — files you upload above will appear here.</p>
                   </td>
                 </tr>
               )}
               {uploads.length > 0 && filteredUploads.length === 0 && (
                 <tr>
                   <td colSpan={canUploadFiles ? 7 : 6} style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    No uploads match these filters.
+                    <SearchX size={28} strokeWidth={1.5} style={{ marginBottom: '8px' }} />
+                    <p style={{ margin: 0 }}>No uploads match these filters.</p>
                   </td>
                 </tr>
               )}
@@ -468,6 +486,7 @@ export default function Upload() {
                             onClick={() => handleDeleteClick(row)}
                             aria-label={`Delete ${row.filename}`}
                             title="Delete upload"
+                            className="gbtac-btn-fx"
                             style={{ background: 'none', border: 'none', color: 'var(--status-red-text)', cursor: 'pointer', display: 'flex' }}
                           >
                             <Trash2 size={16} />
@@ -501,6 +520,7 @@ export default function Upload() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="delete-modal-title"
+          className="gbtac-modal-backdrop"
           style={{
             position: 'fixed',
             top: 0, left: 0, right: 0, bottom: 0,
@@ -513,6 +533,7 @@ export default function Upload() {
           onClick={() => setConfirmDelete(null)}
         >
           <div
+            className="gbtac-modal-box"
             onClick={(e) => e.stopPropagation()}
             style={{
               background: 'var(--surface)',
@@ -531,6 +552,7 @@ export default function Upload() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               <button
                 onClick={() => setConfirmDelete(null)}
+                className="gbtac-btn-fx"
                 style={{
                   padding: '8px 16px',
                   borderRadius: '6px',
@@ -545,6 +567,7 @@ export default function Upload() {
               </button>
               <button
                 onClick={handleConfirmDelete}
+                className="gbtac-btn-fx"
                 style={{
                   padding: '8px 16px',
                   borderRadius: '6px',
@@ -563,7 +586,7 @@ export default function Upload() {
         </div>
       )}
 
-      <Toast message={toastMessage} onDismiss={() => setToastMessage('')} />
+      <Toast message={toastMessage} variant={toastVariant} onDismiss={() => setToastMessage('')} />
     </PageContainer>
   );
 }

@@ -23,6 +23,17 @@ export default function Login() {
 
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
 
+  // Standard 4-square Microsoft mark (official brand colors), the
+  // conventional marker for a "Sign in with Microsoft" button.
+  const MicrosoftLogo = () => (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+      <rect x="0" y="0" width="7" height="7" fill="#F25022" />
+      <rect x="9" y="0" width="7" height="7" fill="#7FBA00" />
+      <rect x="0" y="9" width="7" height="7" fill="#00A4EF" />
+      <rect x="9" y="9" width="7" height="7" fill="#FFB900" />
+    </svg>
+  );
+
   return (
     <div
       style={{
@@ -45,6 +56,7 @@ export default function Login() {
           type="button"
           onClick={toggleTheme}
           aria-label="Toggle dark mode"
+          className="gbtac-btn-fx"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -81,7 +93,12 @@ export default function Login() {
 
           <button
             onClick={handleMicrosoftLogin}
+            className="gbtac-btn-fx"
             style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
               width: '100%',
               padding: '12px',
               marginBottom: '20px',
@@ -94,6 +111,7 @@ export default function Login() {
               cursor: 'pointer',
             }}
           >
+            <MicrosoftLogo />
             Sign in with Microsoft
           </button>
 

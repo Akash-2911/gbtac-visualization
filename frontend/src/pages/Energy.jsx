@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { TrendingUp } from 'lucide-react';
 import PowerBIReport from '../components/PowerBIReport';
 import PageContainer from '../components/PageContainer';
 import ReportCard from '../components/ReportCard';
@@ -12,6 +13,7 @@ export default function Energy() {
       <button
         type="button"
         onClick={() => setShowForecast((prev) => !prev)}
+        className="gbtac-btn-fx"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -28,11 +30,12 @@ export default function Energy() {
           alignSelf: 'flex-start',
         }}
       >
+        <TrendingUp size={15} />
         {showForecast ? 'Hide energy forecast' : 'Show energy forecast'}
       </button>
 
       {showForecast && (
-        <div style={{ marginBottom: '20px' }}>
+        <div className="gbtac-fade-in" style={{ marginBottom: '20px' }}>
           <ForecastChart />
         </div>
       )}
