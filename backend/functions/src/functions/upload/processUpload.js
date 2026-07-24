@@ -36,6 +36,7 @@ const ExcelJS = require("exceljs");
 const sql = require("mssql");
 const { Readable } = require("stream");
 const { DEFAULT_SITE_ID } = require("../../../shared/siteAccess");
+const { getMaxUploadMb } = require("../../../shared/uploadSettings");
 
 // ─────────────────────────────────────────────
 // SQL CONFIG — uses managed identity in Azure,
@@ -55,8 +56,6 @@ const sqlConfig = {
 };
 
 const SITE_ID  = DEFAULT_SITE_ID;
-// Must match the client-side check in frontend/src/pages/Upload.jsx
-const MAX_MB   = 100;
 const BATCH_SIZE = 500;
 
 // ─────────────────────────────────────────────
@@ -544,8 +543,10 @@ app.serviceBusQueue("processUpload", {
       const sizeMb     = fileBuffer.length / (1024 * 1024);
       context.log(`Downloaded ${sizeMb.toFixed(1)} MB`);
 
-      if (sizeMb > MAX_MB) {
-        throw new Error(`File size ${sizeMb.toFixed(1)} MB exceeds the ${MAX_MB} MB limit.`);
+      const maxMb = await getMaxUploadMb(pool);
+
+      if (sizeMb > maxMb) {
+        throw new Error(`File size ${sizeMb.toFixed(1)} MB exceeds the ${maxMb} MB limit.`);
       }
 
       // ── Step 5: Parse Excel ──────────────────────────────────

@@ -109,3 +109,60 @@ h1, h2, h3 {
   width: 100%;
   border: none;
 }
+
+/* ============================================================
+   Shared motion utilities (animation pass — item #7)
+   Reused across pages instead of each defining its own hover/
+   fade rules, so timing stays consistent app-wide.
+   ============================================================ */
+
+/* Generic press/hover feedback for actionable buttons that had
+   none before (flat color, no anticipatory feedback pre-click). */
+.gbtac-btn-fx {
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+.gbtac-btn-fx:hover:not(:disabled) {
+  filter: brightness(0.93);
+}
+.gbtac-btn-fx:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Generic fade-in for content that used to pop in instantly
+   (route pages, revealed panels, chat messages, modals). */
+@keyframes gbtac-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.gbtac-fade-in {
+  animation: gbtac-fade-in 0.18s ease-out;
+}
+
+/* Confirmation-modal entrance (delete-upload, delete-user) — backdrop
+   fades in, dialog scales up from 92% instead of both popping in at
+   full opacity/size instantly. */
+@keyframes gbtac-modal-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes gbtac-modal-box-in {
+  from { opacity: 0; transform: scale(0.94) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.gbtac-modal-backdrop {
+  animation: gbtac-modal-backdrop-in 0.15s ease-out;
+}
+.gbtac-modal-box {
+  animation: gbtac-modal-box-in 0.18s cubic-bezier(0.2, 0.8, 0.3, 1.1);
+}
+
+/* Respect the OS-level reduce-motion preference across every
+   animation/transition in the app, not just the ones added here. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
