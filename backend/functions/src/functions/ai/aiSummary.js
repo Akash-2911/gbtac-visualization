@@ -2,6 +2,8 @@ const { app } = require("@azure/functions");
 const { getPool, sql } = require("../../../shared/sqlClient");
 const { checkAuth } = require("../../../shared/authMiddleware");
 const { checkRateLimit } = require("../../../shared/rateLimiter");
+const { resolveSiteId } = require("../../../shared/siteAccess");
+const { ROLES } = require("../../../shared/roles");
 
 const SYSTEM_PROMPT = `You are a data insight assistant for the GBTAC energy dashboard.
 
@@ -29,10 +31,10 @@ app.http("aiSummary", {
   route: "ai/summary",
   handler: async (request, context) => {
     try {
-      const user = await checkAuth(request, ["Staff", "Admin", "SuperAdmin"]);
+      const user = await checkAuth(request, [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
       checkRateLimit(user.oid, 10, 60000);
 
-      const siteId = request.query.get("site_id") || "1";
+      const siteId = resolveSiteId(request);
       const from = request.query.get("from") || "2000-01-01";
       const to = request.query.get("to") || "2100-01-01";
 

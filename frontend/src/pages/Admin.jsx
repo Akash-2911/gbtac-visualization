@@ -13,6 +13,7 @@ import {
   approveUser,
   denyUser,
 } from '../services/adminService';
+import { ROLES, USER_STATUS } from '../constants/roles';
 
 // Loading skeleton for the KPI cards, shown while summary is still null
 // instead of a bare "—" (feedback item: "Quick Stats Placeholder").
@@ -38,10 +39,10 @@ export default function Admin() {
   // Real role read from the database via /me (shared UserContext), not
   // the JWT token, since SuperAdmin approval only updates the database.
   const { user } = useUser();
-  const role = user?.role || 'Viewer';
+  const role = user?.role || ROLES.VIEWER;
   const currentUserEmail = account?.username || account?.idTokenClaims?.preferred_username;
 
-  const canEditRoles = role === 'SuperAdmin';
+  const canEditRoles = role === ROLES.SUPER_ADMIN;
 
   const [summary, setSummary] = useState(null);
   const [users, setUsers] = useState([]);
@@ -60,7 +61,7 @@ fetchUsers()
         // Only show approved users here, pending users live in the
         // Pending Approval section above, denied users don't need to
         // clutter this table either.
-        setUsers(all.filter((u) => u.status === 'active'));
+        setUsers(all.filter((u) => u.status === USER_STATUS.ACTIVE));
       })
       .catch((e) => setError(e.message));
     if (canEditRoles) {
@@ -115,7 +116,7 @@ const handleDeny = async (userId) => {
   };
 
   const handleApprove = async (userId) => {
-    const chosenRole = pendingRoleChoice[userId] || 'Viewer';
+    const chosenRole = pendingRoleChoice[userId] || ROLES.VIEWER;
     try {
       await approveUser(userId, chosenRole);
       showToast(`User approved as ${chosenRole}`);
@@ -221,15 +222,15 @@ const handleDeny = async (userId) => {
                           <td style={{ padding: '10px 8px' }}>{u.email}</td>
                           <td style={{ padding: '10px 8px' }}>
                             <select
-                              value={pendingRoleChoice[u.id] || 'Viewer'}
+                              value={pendingRoleChoice[u.id] || ROLES.VIEWER}
                               onChange={(e) =>
                                 setPendingRoleChoice((prev) => ({ ...prev, [u.id]: e.target.value }))
                               }
                               style={{ padding: '4px 6px', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.75rem' }}
                             >
-                              <option>Viewer</option>
-                              <option>Staff</option>
-                              <option>Admin</option>
+                              <option value={ROLES.VIEWER}>Viewer</option>
+                              <option value={ROLES.STAFF}>Staff</option>
+                              <option value={ROLES.ADMIN}>Admin</option>
                             </select>
                           </td>
                           <td style={{ padding: '10px 8px', whiteSpace: 'nowrap' }}>
@@ -334,10 +335,10 @@ const handleDeny = async (userId) => {
                           onChange={(e) => handleRoleChange(u.id, e.target.value)}
                           style={{ padding: '4px 6px', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '0.75rem' }}
                         >
-                          <option>Viewer</option>
-                          <option>Staff</option>
-                          <option>Admin</option>
-                          <option>SuperAdmin</option>
+                          <option value={ROLES.VIEWER}>Viewer</option>
+                          <option value={ROLES.STAFF}>Staff</option>
+                          <option value={ROLES.ADMIN}>Admin</option>
+                          <option value={ROLES.SUPER_ADMIN}>SuperAdmin</option>
                         </select>
                       ) : (
                         <span>{u.role}</span>
@@ -345,8 +346,8 @@ const handleDeny = async (userId) => {
                     </td>
                     <td style={{ padding: '10px 8px' }}>
                       {(() => {
-                        const isUploadAllowed = u.role === 'SuperAdmin' || u.canUpload;
-                        const canToggleUpload = u.role === 'Admin' && canEditRoles && !isSelf;
+                        const isUploadAllowed = u.role === ROLES.SUPER_ADMIN || u.canUpload;
+                        const canToggleUpload = u.role === ROLES.ADMIN && canEditRoles && !isSelf;
                         return (
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                             <Toggle

@@ -23,6 +23,14 @@ jobs:
           REACT_APP_API_BASE_URL: https://func-gbtac-dev1-g8d8c2c6e6crc2ag.canadacentral-01.azurewebsites.net/api
           REACT_APP_AAD_CLIENT_ID: 1dbd7a4a-eb19-4757-9785-ba98bd0d45b9
           REACT_APP_AAD_TENANT_ID: cbe66312-1468-4ec8-9cda-aec4905862fe
+          REACT_APP_PBI_REPORT_ID: 84ba8dbd-1617-4315-b03e-37ef3be4e905
+          REACT_APP_PBI_PAGE_OVERVIEW: ae24fc3a0479d5e60727
+          REACT_APP_PBI_PAGE_ENERGY: ee587a4a0d8d49fcca10
+          REACT_APP_PBI_PAGE_SOLAR: 8f9a0b1c2d3e4f5a6b7d
+          REACT_APP_PBI_PAGE_WEATHER: 8747da8341ec9213795a
+          REACT_APP_PBI_PAGE_EMISSIONS: 9f9fda1b2c3d4e5f6a7c
+          REACT_APP_PBI_PAGE_ENERGY_VS_SOLAR: 6d7e8f9a0b1c2d3e4f5a
+          REACT_APP_PBI_PAGE_ENERGY_SOLAR_BREAKDOWN: 7e8f9a0b1c2d3e4f5a6b
         run: |
           npm install
           npm run build --if-present

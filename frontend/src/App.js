@@ -12,10 +12,10 @@ import Compare from './pages/Compare';
 import Emissions from './pages/Emissions';
 import AIAssistant from './pages/AIAssistant';
 import Settings from './pages/Settings';
-import DataEntry from './pages/DataEntry';
 import Admin from './pages/Admin';
 import Upload from './pages/Upload';
 import { ThemeProvider } from './components/ThemeContext';
+import { ROLES } from './constants/roles';
 
 function App() {
   return (
@@ -41,24 +41,16 @@ function App() {
               <Route
                 path="ai-assistant"
                 element={
-                  <ProtectedRoute allowedRoles={['Staff', 'Admin', 'SuperAdmin']}>
+                  <ProtectedRoute allowedRoles={[ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN]}>
                     <AIAssistant />
                   </ProtectedRoute>
                 }
               />
               <Route path="settings" element={<Settings />} />
               <Route
-                path="admin/data-entry"
-                element={
-                  <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin']}>
-                    <DataEntry />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="admin/upload"
                 element={
-                  <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin']}>
+                  <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}>
                     <Upload />
                   </ProtectedRoute>
                 }
@@ -66,7 +58,7 @@ function App() {
               <Route
                 path="admin"
                 element={
-                  <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin']}>
+                  <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}>
                     <Admin />
                   </ProtectedRoute>
                 }

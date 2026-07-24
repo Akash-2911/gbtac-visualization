@@ -35,6 +35,7 @@ const { BlobServiceClient } = require("@azure/storage-blob");
 const ExcelJS = require("exceljs");
 const sql = require("mssql");
 const { Readable } = require("stream");
+const { DEFAULT_SITE_ID } = require("../../../shared/siteAccess");
 
 // ─────────────────────────────────────────────
 // SQL CONFIG — uses managed identity in Azure,
@@ -53,7 +54,8 @@ const sqlConfig = {
   },
 };
 
-const SITE_ID  = 1;
+const SITE_ID  = DEFAULT_SITE_ID;
+// Must match the client-side check in frontend/src/pages/Upload.jsx
 const MAX_MB   = 100;
 const BATCH_SIZE = 500;
 
@@ -485,21 +487,26 @@ app.serviceBusQueue("processUpload", {
   handler: async (message, context) => {
     context.log("processUpload triggered. Message:", JSON.stringify(message));
 
-    const { blobName, blobUrl, originalFileName, uploadedBy, uploadedAt } = message;
+    const { blobName, blobUrl, originalFileName, uploadedBy, uploadedAt, dataType } = message;
 
     let pool    = null;
     let batchId = null;
 
     try {
       // ── Step 1: Detect dataset type ─────────────────────────
-      const datasetType = detectDatasetType(originalFileName || blobName);
-      if (!datasetType) {
+      // Prefer the type the user explicitly picked in the upload dropdown
+      // (uploadFile.js) over filename guessing — only fall back to
+      // detectDatasetType() for messages that didn't include one.
+      const datasetType = dataType || detectDatasetType(originalFileName || blobName);
+      if (!datasetType || !DATASET_CONFIGS[datasetType]) {
         throw new Error(
-          `Cannot determine dataset type from file name '${originalFileName}'. ` +
-          `File name must contain 'greenhouse', 'solar', or 'weather'.`
+          dataType
+            ? `Unknown dataset type '${dataType}'. Must be greenhouse, solar, or weather.`
+            : `Cannot determine dataset type from file name '${originalFileName}'. ` +
+              `File name must contain 'greenhouse', 'solar', or 'weather'.`
         );
       }
-      context.log(`Dataset type detected: ${datasetType}`);
+      context.log(`Dataset type detected: ${datasetType}${dataType ? " (from user selection)" : " (from file name)"}`);
 
       // ── Step 2: Connect to SQL ───────────────────────────────
       pool = await sql.connect(sqlConfig);

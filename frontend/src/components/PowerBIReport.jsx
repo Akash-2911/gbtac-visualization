@@ -3,14 +3,18 @@ import { PowerBIEmbed } from 'powerbi-client-react';
 import { models } from 'powerbi-client';
 import { fetchEmbedToken } from '../services/embedTokenService';
 
+// Report/page IDs come from env vars so dev/staging/prod can point at
+// different Power BI workspaces without editing code. See .env.example.
+const REPORT_ID = process.env.REACT_APP_PBI_REPORT_ID;
+
 const REPORT_MAP = {
-  weather: { reportId: '8c43f0fe-6963-4fe2-afd1-c1429ea5a76a', pageId: 'f2d890f1552c7cdec936' },
-  overview: { reportId: '8c43f0fe-6963-4fe2-afd1-c1429ea5a76a', pageId: '0a43f601edddf2ea58d8' },
-  greenhouseEnergy: { reportId: 'd539932b-add1-4c6b-ad19-7e4ea08ee044', pageId: '9fb111ee357b4627a3b5' },
-  energyVsSolar: { reportId: 'd539932b-add1-4c6b-ad19-7e4ea08ee044', pageId: 'd9da5989d76e7e210ca3' },
-  energySolarBreakdown: { reportId: 'd539932b-add1-4c6b-ad19-7e4ea08ee044', pageId: '549f57835ef0a0dd3d84' },
-  solarGeneration: { reportId: '1fba11af-ee34-40e1-8eae-f82945c84f90', pageId: 'b21899854ca5981473a0' },
- emissions: { reportId: '8c43f0fe-6963-4fe2-afd1-c1429ea5a76a', pageId: 'fb50e36d7fa37a453f2f' },
+  overview: { reportId: REPORT_ID, pageId: process.env.REACT_APP_PBI_PAGE_OVERVIEW },
+  greenhouseEnergy: { reportId: REPORT_ID, pageId: process.env.REACT_APP_PBI_PAGE_ENERGY }, // Energy page
+  solarGeneration: { reportId: REPORT_ID, pageId: process.env.REACT_APP_PBI_PAGE_SOLAR }, // Solar page
+  weather: { reportId: REPORT_ID, pageId: process.env.REACT_APP_PBI_PAGE_WEATHER },
+  emissions: { reportId: REPORT_ID, pageId: process.env.REACT_APP_PBI_PAGE_EMISSIONS },
+  energyVsSolar: { reportId: REPORT_ID, pageId: process.env.REACT_APP_PBI_PAGE_ENERGY_VS_SOLAR },
+  energySolarBreakdown: { reportId: REPORT_ID, pageId: process.env.REACT_APP_PBI_PAGE_ENERGY_SOLAR_BREAKDOWN }, // Compare - Breakdown
 };
 
 export default function PowerBIReport({ reportKey }) {

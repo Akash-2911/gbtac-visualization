@@ -11,3 +11,7 @@ export function postAiChat(question) {
     body: JSON.stringify({ question }),
   });
 }
+
+export function fetchAiForecast() {
+  return authFetch('/ai/predict');
+}

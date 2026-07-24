@@ -1,6 +1,8 @@
 import { getAccessToken } from '../auth/getAccessToken';
 
-const API_BASE_URL =
+// Single source of truth for the backend base URL — was previously
+// duplicated in summaryService.js and embedTokenService.js.
+export const API_BASE_URL =
   process.env.REACT_APP_API_BASE_URL ||
   'https://func-gbtac-dev1-g8d8c2c6e6crc2ag.canadacentral-01.azurewebsites.net/api';
 

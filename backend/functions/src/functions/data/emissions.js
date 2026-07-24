@@ -1,6 +1,8 @@
 const { app } = require("@azure/functions");
-const { getPool, sql } = require("../../shared/sqlClient");
-const { checkAuth } = require("../../shared/authMiddleware");
+const { getPool, sql } = require("../../../shared/sqlClient");
+const { checkAuth } = require("../../../shared/authMiddleware");
+const { resolveSiteId } = require("../../../shared/siteAccess");
+const { ROLES } = require("../../../shared/roles");
 
 app.http("emissions", {
   methods: ["GET"],
@@ -8,9 +10,9 @@ app.http("emissions", {
   route: "emissions",
   handler: async (request, context) => {
     try {
-      const user = await checkAuth(request, ["Viewer", "Staff", "Admin", "SuperAdmin"]);
+      const user = await checkAuth(request, [ROLES.VIEWER, ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
 
-      const siteId = request.query.get("site_id") || "1";
+      const siteId = resolveSiteId(request);
       const from = request.query.get("from") || "2000-01-01";
       const to = request.query.get("to") || "2100-01-01";
 

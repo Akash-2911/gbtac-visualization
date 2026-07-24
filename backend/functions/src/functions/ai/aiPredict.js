@@ -23,6 +23,8 @@ const { app } = require("@azure/functions");
 const { getPool, sql } = require("../../../shared/sqlClient");
 const { checkAuth } = require("../../../shared/authMiddleware");
 const { checkRateLimit } = require("../../../shared/rateLimiter");
+const { resolveSiteId } = require("../../../shared/siteAccess");
+const { ROLES } = require("../../../shared/roles");
 
 // Energy columns — same as aiSummary.js and aiChat.js
 const ENERGY_COLUMNS = [
@@ -49,10 +51,10 @@ app.http("aiPredict", {
   handler: async (request, context) => {
     try {
       // Auth: Staff and above — Viewer role blocked (same as other AI endpoints)
-      const user = await checkAuth(request, ["Staff", "Admin", "SuperAdmin"]);
+      const user = await checkAuth(request, [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
       checkRateLimit(user.oid, 10, 60000);
 
-      const siteId = parseInt(request.query.get("site_id") || "1");
+      const siteId = resolveSiteId(request);
 
       const pool = await getPool();
       const energySumExpr = ENERGY_COLUMNS.join(" + ");

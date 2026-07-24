@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const jwksClient = require("jwks-rsa");
 const { getPool, sql } = require("./sqlClient");
+const { ROLES, USER_STATUS } = require("./roles");
 
 const tenantId = process.env.AUTH_TENANT_ID;
 const clientId = process.env.AUTH_CLIENT_ID;
@@ -24,19 +25,6 @@ function getSigningKey(header, callback) {
 // Verifies a raw JWT string, returns the decoded token payload if valid
 function verifyToken(token) {
   return new Promise((resolve, reject) => {
-
-    // TEMP DEBUG — log what we expect vs what's in token
-    const decoded_unverified = jwt.decode(token);
-    console.log("TOKEN DEBUG:", JSON.stringify({
-      iss: decoded_unverified?.iss,
-      aud: decoded_unverified?.aud,
-      ver: decoded_unverified?.ver,
-      exp: decoded_unverified?.exp,
-      expected_issuer: `https://login.microsoftonline.com/${tenantId}/v2.0`,
-      expected_audience: clientId,
-    }, null, 2));
-    // END TEMP DEBUG
-
     jwt.verify(
       token,
       getSigningKey,
@@ -108,7 +96,7 @@ async function getOrCreateDbUser(decodedToken) {
     .input("entraOid", sql.NVarChar, entraOid)
     .query(`
       INSERT INTO users (display_name, email, role, active, status, can_upload, entra_oid)
-      VALUES (@displayName, @email, 'Viewer', 0, 'pending', 0, @entraOid)
+      VALUES (@displayName, @email, '${ROLES.VIEWER}', 0, '${USER_STATUS.PENDING}', 0, @entraOid)
     `);
 
   const created = await pool.request()
@@ -164,13 +152,13 @@ async function getAuthenticatedUser(request) {
 async function checkAuth(request, allowedRoles = null) {
   const user = await getAuthenticatedUser(request);
 
-  if (user.status === "pending") {
+  if (user.status === USER_STATUS.PENDING) {
     const err = new Error("Your account is pending SuperAdmin approval.");
     err.status = 428;
     throw err;
   }
 
-  if (user.status === "denied") {
+  if (user.status === USER_STATUS.DENIED) {
     const err = new Error("Your access request was denied.");
     err.status = 423;
     throw err;

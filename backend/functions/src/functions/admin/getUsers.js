@@ -18,7 +18,8 @@
  */
 
 const { app } = require("@azure/functions");
-const { checkAuth } = require("../../shared/authMiddleware");
+const { checkAuth } = require("../../../shared/authMiddleware");
+const { ROLES } = require("../../../shared/roles");
 const sql = require("mssql");
 
 const sqlConfig = {
@@ -35,7 +36,7 @@ app.http("getUsers", {
   handler: async (request, context) => {
     try {
       // Only Admin and SuperAdmin can view user list
-      await checkAuth(request, ["Admin", "SuperAdmin"]);
+      await checkAuth(request, [ROLES.ADMIN, ROLES.SUPER_ADMIN]);
 
       // Parse optional filters
       const roleFilter   = request.query.get("role")   || null;
@@ -76,10 +77,10 @@ app.http("getUsers", {
         ${where}
         ORDER BY
           CASE role
-            WHEN 'SuperAdmin' THEN 1
-            WHEN 'Admin'      THEN 2
-            WHEN 'Staff'      THEN 3
-            WHEN 'Viewer'     THEN 4
+            WHEN '${ROLES.SUPER_ADMIN}' THEN 1
+            WHEN '${ROLES.ADMIN}'       THEN 2
+            WHEN '${ROLES.STAFF}'       THEN 3
+            WHEN '${ROLES.VIEWER}'      THEN 4
             ELSE 5
           END,
           display_name ASC

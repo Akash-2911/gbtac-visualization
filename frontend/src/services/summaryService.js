@@ -1,8 +1,5 @@
 import { getAccessToken } from '../auth/getAccessToken';
-
-const API_BASE_URL =
-  process.env.REACT_APP_API_BASE_URL ||
-  'https://func-gbtac-dev1-g8d8c2c6e6crc2ag.canadacentral-01.azurewebsites.net/api';
+import { API_BASE_URL } from './apiClient';
 
 export async function fetchSummary({ siteId, from, to } = {}) {
   const accessToken = await getAccessToken();

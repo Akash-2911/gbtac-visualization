@@ -24,7 +24,8 @@
  */
 
 const { app } = require("@azure/functions");
-const { checkAuth } = require("../../shared/authMiddleware");
+const { checkAuth } = require("../../../shared/authMiddleware");
+const { ROLES, USER_STATUS } = require("../../../shared/roles");
 const sql = require("mssql");
 
 const sqlConfig = {
@@ -34,8 +35,8 @@ const sqlConfig = {
   options: { encrypt: true, trustServerCertificate: false },
 };
 
-const ALLOWED_ROLES = ["Admin", "Staff", "Viewer"];  // SuperAdmin not settable via API
-const ALLOWED_STATUSES = ["pending", "active", "denied"];
+const ALLOWED_ROLES = [ROLES.ADMIN, ROLES.STAFF, ROLES.VIEWER];  // SuperAdmin not settable via API
+const ALLOWED_STATUSES = [USER_STATUS.PENDING, USER_STATUS.ACTIVE, USER_STATUS.DENIED];
 
 app.http("updateUser", {
   methods: ["PATCH"],
@@ -44,7 +45,7 @@ app.http("updateUser", {
   handler: async (request, context) => {
     try {
       // SuperAdmin only — matches Akash's 4-tier role model for destructive actions
-      const caller = await checkAuth(request, ["SuperAdmin"]);
+      const caller = await checkAuth(request, [ROLES.SUPER_ADMIN]);
 
       // Parse target user ID from route
       const targetUserId = parseInt(request.params.id);

@@ -3,6 +3,7 @@ import { UploadCloud, CheckCircle2, RotateCw, AlertCircle, Clock, AlertTriangle,
 import PageContainer from '../components/PageContainer';
 import Toast from '../components/Toast';
 import { fetchUploadHistory, deleteUpload, uploadFile, fetchMe } from '../services/adminService';
+import { ROLES } from '../constants/roles';
 
 const statusConfig = {
   complete: { bg: 'var(--status-green-bg)', text: 'var(--status-green-text)', label: 'Complete', icon: CheckCircle2 },
@@ -23,7 +24,7 @@ export default function Upload() {
     fetchMe().then(setMe).catch(() => setMe(null));
   }, []);
 
-  const canUploadFiles = me?.role === 'SuperAdmin' || (me?.role === 'Admin' && me?.canUpload);
+  const canUploadFiles = me?.role === ROLES.SUPER_ADMIN || (me?.role === ROLES.ADMIN && me?.canUpload);
 
   const [uploads, setUploads] = useState([]);
   const [error, setError] = useState(null);
@@ -63,8 +64,9 @@ export default function Upload() {
       alert('Only .xlsx files are supported.');
       return;
     }
-    if (file.size > 50 * 1024 * 1024) {
-      alert('File exceeds the 50MB limit.');
+    // Must match MAX_MB in backend/functions/src/functions/upload/processUpload.js
+    if (file.size > 100 * 1024 * 1024) {
+      alert('File exceeds the 100MB limit.');
       return;
     }
     try {
@@ -208,7 +210,7 @@ export default function Upload() {
             >
               <UploadCloud size={28} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
               <p style={{ fontSize: '0.875rem', fontWeight: 600, margin: 0 }}>
-                Drag &amp; drop .xlsx file or click to browse — max 50MB
+                Drag &amp; drop .xlsx file or click to browse — max 100MB
               </p>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>
                 Supports Excel files containing sensor data.
