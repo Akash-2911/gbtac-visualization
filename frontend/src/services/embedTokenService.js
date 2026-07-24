@@ -1,10 +1,7 @@
-const API_BASE_URL =
-  process.env.REACT_APP_API_BASE_URL ||
-  'https://func-gbtac-dev1-g8d8c2c6e6crc2ag.canadacentral-01.azurewebsites.net/api';
-
 const USE_MOCK = process.env.REACT_APP_USE_MOCK_EMBED_TOKEN === 'true';
 
 import { getAccessToken } from '../auth/getAccessToken';
+import { API_BASE_URL } from './apiClient';
 
 export async function fetchEmbedToken(reportId) {
   if (USE_MOCK) {

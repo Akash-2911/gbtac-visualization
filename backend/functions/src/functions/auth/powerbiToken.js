@@ -14,6 +14,7 @@ const { app } = require("@azure/functions");
 const axios = require("axios");
 const { getPowerBiAccessToken } = require("../../../shared/powerbiAuth");
 const { checkAuth } = require("../../../shared/authMiddleware");
+const { ROLES } = require("../../../shared/roles");
 
 app.http("powerbiToken", {
   methods: ["GET"],
@@ -22,7 +23,7 @@ app.http("powerbiToken", {
   handler: async (request, context) => {
     try {
       // All authenticated roles can get embed tokens — dashboards are read-only for everyone
-      await checkAuth(request, ["SuperAdmin", "Admin", "Staff", "Viewer"]);
+      await checkAuth(request, [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.STAFF, ROLES.VIEWER]);
 
       const reportId   = request.query.get("reportId");
       const workspaceId = process.env.PBI_WORKSPACE_ID;
