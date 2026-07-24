@@ -42,6 +42,13 @@ export default function PowerBIReport({ reportKey }) {
         pageName: REPORT_MAP[reportKey].pageId,
         settings: {
           layoutType: models.LayoutType.Custom,
+          // Custom layout on its own doesn't scale anything — it needs an
+          // explicit displayOption. Without this, the report renders at its
+          // native designed canvas size and the only way to see it properly
+          // is to manually zoom, which was the actual bug being reported.
+          customLayout: {
+            displayOption: models.DisplayOption.FitToWidth,
+          },
           panes: {
             filters: { visible: false },
             pageNavigation: { visible: false },
