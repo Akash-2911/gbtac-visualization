@@ -35,11 +35,37 @@ app.http("aiSummary", {
       checkRateLimit(user.oid, 10, 60000);
 
       const siteId = resolveSiteId(request);
-      const from = request.query.get("from") || "2000-01-01";
-      const to = request.query.get("to") || "2100-01-01";
-
       const pool = await getPool();
       const energySumExpr = ENERGY_COLUMNS.join(" + ");
+
+      let from = request.query.get("from");
+      let to = request.query.get("to");
+
+      if (!from || !to) {
+        // Default to the most recent 30 days of actual data for this site,
+        // rather than an arbitrary fixed window — the dataset is historical
+        // and may not extend anywhere near the current calendar date.
+        const latestResult = await pool
+          .request()
+          .input("siteId", sql.Int, siteId)
+          .query(`SELECT MAX(reading_date) AS latest_date FROM vw_daily_energy_summary WHERE site_id = @siteId`);
+
+        const latestDate = latestResult.recordset[0].latest_date;
+
+        if (!latestDate) {
+          return {
+            status: 200,
+            jsonBody: { insight: "Insight unavailable" },
+          };
+        }
+
+        const toDate = new Date(latestDate);
+        const fromDate = new Date(toDate);
+        fromDate.setDate(fromDate.getDate() - 29);
+
+        to = toDate.toISOString().slice(0, 10);
+        from = fromDate.toISOString().slice(0, 10);
+      }
 
       const energyResult = await pool
         .request()
