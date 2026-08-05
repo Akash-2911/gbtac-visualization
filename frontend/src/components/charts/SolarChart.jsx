@@ -1,8 +1,10 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { chartCardStyle, chartTitleStyle } from './chartUtils';
+import { chartCardStyle, chartTitleStyle, useFillOpacity } from './chartUtils';
 
 export default function SolarChart({ data, totalKwh }) {
+  const collector1Opacity = useFillOpacity(0.25);
+  const collector2Opacity = useFillOpacity(0.4);
   return (
     <div style={chartCardStyle}>
       <h3 style={chartTitleStyle}>Daily Solar Generation by Collector</h3>
@@ -24,7 +26,7 @@ export default function SolarChart({ data, totalKwh }) {
             stroke="var(--accent-blue)"
             strokeWidth={2}
             fill="var(--accent-blue)"
-            fillOpacity={0.25}
+            fillOpacity={collector1Opacity}
             name="Collector 1"
           />
           <Area
@@ -32,10 +34,10 @@ export default function SolarChart({ data, totalKwh }) {
             type="monotone"
             dataKey="collector2Kwh"
             stackId="1"
-            stroke="var(--accent-purple)"
+            stroke="var(--solar-tint-1)"
             strokeWidth={2}
-            fill="var(--accent-purple)"
-            fillOpacity={0.25}
+            fill="var(--solar-tint-1)"
+            fillOpacity={collector2Opacity}
             name="Collector 2"
           />
         </AreaChart>

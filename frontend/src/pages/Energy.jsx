@@ -44,7 +44,7 @@ function EnergyRechartsView() {
               data={cumulativeInput}
               title="Cumulative Energy Consumption"
               label="Cumulative kWh"
-              color="var(--accent-blue)"
+              color="var(--accent-purple)"
               unit="kWh"
             />
           </div>

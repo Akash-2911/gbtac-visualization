@@ -220,7 +220,7 @@ export default function Layout() {
                               marginLeft: 'auto',
                               fontSize: '0.5625rem',
                               fontWeight: 700,
-                              background: 'var(--accent-purple)',
+                              background: 'var(--ai-accent)',
                               color: '#fff',
                               padding: '1px 6px',
                               borderRadius: '10px',

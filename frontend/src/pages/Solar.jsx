@@ -44,7 +44,7 @@ function SolarRechartsView() {
               yKey="totalKwh"
               xLabel="Avg Sunlight (W/m²)"
               yLabel="Total kWh"
-              color="var(--accent-blue)"
+              color="var(--status-orange-text)"
             />
           </div>
         </div>

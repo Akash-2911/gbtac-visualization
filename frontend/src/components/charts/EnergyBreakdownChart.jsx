@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { chartCardStyle, chartTitleStyle } from './chartUtils';
+import { chartCardStyle, chartTitleStyle, useFillOpacity } from './chartUtils';
 import { ENERGY_GROUPS, groupBreakdown } from './energyGroups';
 
 export default function EnergyBreakdownChart({ dailyRecords }) {
@@ -12,6 +12,7 @@ export default function EnergyBreakdownChart({ dailyRecords }) {
       })),
     [dailyRecords]
   );
+  const fillOpacity = useFillOpacity(0.7);
 
   return (
     <div style={chartCardStyle}>
@@ -36,7 +37,7 @@ export default function EnergyBreakdownChart({ dailyRecords }) {
               stroke={group.color}
               strokeWidth={1.5}
               fill={group.color}
-              fillOpacity={0.7}
+              fillOpacity={fillOpacity}
               name={group.name}
             />
           ))}

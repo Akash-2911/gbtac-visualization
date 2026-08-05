@@ -1,8 +1,9 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { chartCardStyle, chartTitleStyle } from './chartUtils';
+import { chartCardStyle, chartTitleStyle, useFillOpacity } from './chartUtils';
 
 export default function WeatherHumidityChart({ data }) {
+  const fillOpacity = useFillOpacity(0.15);
   return (
     <div style={chartCardStyle}>
       <h3 style={chartTitleStyle}>Average Humidity</h3>
@@ -19,10 +20,10 @@ export default function WeatherHumidityChart({ data }) {
             isAnimationActive={false}
             type="monotone"
             dataKey="avgHumidityPct"
-            stroke="var(--accent-purple)"
+            stroke="var(--status-green-text)"
             strokeWidth={2}
-            fill="var(--accent-purple)"
-            fillOpacity={0.15}
+            fill="var(--status-green-text)"
+            fillOpacity={fillOpacity}
             name="Avg Humidity"
           />
         </AreaChart>

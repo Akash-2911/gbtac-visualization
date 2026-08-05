@@ -47,7 +47,7 @@ function WeatherRechartsView() {
             data={cumulativePrecipInput}
             title="Cumulative Precipitation"
             label="Cumulative Precipitation"
-            color="var(--accent-blue)"
+            color="var(--accent-teal)"
             unit="mm"
           />
         </div>
