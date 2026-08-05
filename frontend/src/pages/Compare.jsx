@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, BarChart3, LayoutDashboard } from 'lucide-react';
 import PowerBIReport from '../components/PowerBIReport';
 import PageContainer from '../components/PageContainer';
 import ReportCard from '../components/ReportCard';
+import ViewToggle from '../components/ViewToggle';
+import CompareChart from '../components/charts/CompareChart';
 import { fetchAiSummary } from '../services/aiService';
 import { highlightMetrics } from '../components/highlightMetrics';
 
@@ -11,8 +13,14 @@ const views = [
   { key: 'energySolarBreakdown', label: 'Energy & Solar Breakdown' },
 ];
 
+const CHART_VIEW_OPTIONS = [
+  { value: 'powerbi', label: 'Power BI', icon: <LayoutDashboard size={14} /> },
+  { value: 'recharts', label: 'Recharts', icon: <BarChart3 size={14} /> },
+];
+
 export default function Compare() {
   const [activeView, setActiveView] = useState('energyVsSolar');
+  const [chartView, setChartView] = useState('powerbi');
   const [insight, setInsight] = useState(null);
   const [insightError, setInsightError] = useState(null);
   const [insightLoading, setInsightLoading] = useState(true);
@@ -83,41 +91,49 @@ export default function Compare() {
         </div>
       </div>
 
-      <div
-        style={{
-          display: 'inline-flex',
-          backgroundColor: 'var(--bg)',
-          borderRadius: '8px',
-          padding: '4px',
-          marginBottom: '16px',
-          alignSelf: 'flex-start',
-        }}
-      >
-        {views.map((view) => (
-          <button
-            key={view.key}
-            type="button"
-            onClick={() => setActiveView(view.key)}
+      <ViewToggle value={chartView} onChange={setChartView} options={CHART_VIEW_OPTIONS} />
+
+      {chartView === 'powerbi' ? (
+        <>
+          <div
             style={{
-              padding: '8px 16px',
-              fontSize: '13px',
-              fontWeight: 600,
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              backgroundColor: activeView === view.key ? 'var(--accent-blue)' : 'transparent',
-              color: activeView === view.key ? '#fff' : 'var(--text-secondary)',
-              transition: 'background-color 0.15s',
+              display: 'inline-flex',
+              backgroundColor: 'var(--bg)',
+              borderRadius: '8px',
+              padding: '4px',
+              marginBottom: '16px',
+              alignSelf: 'flex-start',
             }}
           >
-            {view.label}
-          </button>
-        ))}
-      </div>
+            {views.map((view) => (
+              <button
+                key={view.key}
+                type="button"
+                onClick={() => setActiveView(view.key)}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  borderRadius: '6px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  backgroundColor: activeView === view.key ? 'var(--accent-blue)' : 'transparent',
+                  color: activeView === view.key ? '#fff' : 'var(--text-secondary)',
+                  transition: 'background-color 0.15s',
+                }}
+              >
+                {view.label}
+              </button>
+            ))}
+          </div>
 
-      <ReportCard>
-        <PowerBIReport reportKey={activeView} />
-      </ReportCard>
+          <ReportCard>
+            <PowerBIReport reportKey={activeView} />
+          </ReportCard>
+        </>
+      ) : (
+        <CompareChart />
+      )}
 
       <style>{`
         @keyframes gbtac-pulse {
