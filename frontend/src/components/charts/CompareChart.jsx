@@ -16,12 +16,12 @@ export default function CompareChart({ data, totalEnergyKwh, totalSolarKwh }) {
             formatter={(value, name) => [`${value.toFixed(1)} kWh`, name]}
           />
           <Legend wrapperStyle={{ fontSize: '12px' }} />
-          <Line type="monotone" dataKey="energyKwh" stroke="var(--accent-blue)" strokeWidth={2} dot={false} name="Energy Consumed" isAnimationActive={false} />
+          <Line type="monotone" dataKey="energyKwh" stroke="var(--accent-purple)" strokeWidth={2} dot={false} name="Energy Consumed" isAnimationActive={false} />
           <Line
             isAnimationActive={false}
             type="monotone"
             dataKey="solarKwh"
-            stroke="var(--status-green-text)"
+            stroke="var(--accent-blue)"
             strokeWidth={2}
             dot={false}
             name="Solar Generated"

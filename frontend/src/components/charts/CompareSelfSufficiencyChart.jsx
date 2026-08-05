@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer } from 'recharts';
-import { chartCardStyle, chartTitleStyle } from './chartUtils';
+import { chartCardStyle, chartTitleStyle, useFillOpacity } from './chartUtils';
 
 export default function CompareSelfSufficiencyChart({ data }) {
+  const fillOpacity = useFillOpacity(0.15);
   const chartData = useMemo(
     () =>
       data.map((r) => ({
@@ -32,7 +33,7 @@ export default function CompareSelfSufficiencyChart({ data }) {
             stroke="var(--status-green-text)"
             strokeWidth={2}
             fill="var(--status-green-text)"
-            fillOpacity={0.15}
+            fillOpacity={fillOpacity}
             name="Self-sufficiency"
           />
         </AreaChart>

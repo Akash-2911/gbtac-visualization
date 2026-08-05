@@ -12,6 +12,6 @@ export default function SolarCollectorTotalsChart({ data }) {
   }, [data]);
 
   return (
-    <CategoryTotalsChart data={totals} title="Total Generation by Collector (selected range)" color="var(--accent-purple)" unit="kWh" />
+    <CategoryTotalsChart data={totals} title="Total Generation by Collector (selected range)" color="var(--accent-blue)" unit="kWh" />
   );
 }

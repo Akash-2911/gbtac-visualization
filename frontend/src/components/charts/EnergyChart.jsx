@@ -1,11 +1,12 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { chartCardStyle, chartTitleStyle } from './chartUtils';
+import { chartCardStyle, chartTitleStyle, useFillOpacity } from './chartUtils';
 
 // Presentational — receives already-fetched daily records (page-level
 // fetch is shared across this page's other charts) rather than fetching
 // its own copy of the same endpoint.
 export default function EnergyChart({ data, totalKwh }) {
+  const fillOpacity = useFillOpacity(0.15);
   return (
     <div style={chartCardStyle}>
       <h3 style={chartTitleStyle}>Daily Energy Consumption</h3>
@@ -22,10 +23,10 @@ export default function EnergyChart({ data, totalKwh }) {
             isAnimationActive={false}
             type="monotone"
             dataKey="totalKwh"
-            stroke="var(--accent-blue)"
+            stroke="var(--accent-purple)"
             strokeWidth={2}
-            fill="var(--accent-blue)"
-            fillOpacity={0.15}
+            fill="var(--accent-purple)"
+            fillOpacity={fillOpacity}
             name="Total kWh"
           />
         </AreaChart>

@@ -13,6 +13,6 @@ export default function EnergyBySystemChart({ dailyRecords }) {
   }, [dailyRecords]);
 
   return (
-    <CategoryTotalsChart data={data} title="Total Energy by System (selected range)" color="var(--accent-blue)" unit="kWh" />
+    <CategoryTotalsChart data={data} title="Total Energy by System (selected range)" color="var(--accent-purple)" unit="kWh" />
   );
 }

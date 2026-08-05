@@ -1,10 +1,12 @@
 import React from 'react';
-import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { chartCardStyle, chartTitleStyle } from './chartUtils';
+import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { chartCardStyle, chartTitleStyle, useFillOpacity } from './chartUtils';
 
-// Diverging pair (avg = cool/neutral pole, peak = warm pole) — same
-// convention as WeatherChart's temperature range.
+// Both series belong to the "sunlight" category, so both stay in the
+// orange family — average as a filled area, peak as a dashed line over it —
+// instead of splitting them across two unrelated hues.
 export default function SolarSunlightChart({ data }) {
+  const fillOpacity = useFillOpacity(0.15);
   return (
     <div style={chartCardStyle}>
       <h3 style={chartTitleStyle}>Sunlight Intensity</h3>
@@ -18,13 +20,23 @@ export default function SolarSunlightChart({ data }) {
             formatter={(value, name) => [`${value.toFixed(0)} W/m²`, name]}
           />
           <Legend wrapperStyle={{ fontSize: '12px' }} />
-          <Line type="monotone" dataKey="avgSunlightWm2" stroke="var(--accent-blue)" strokeWidth={2} dot={false} name="Average" isAnimationActive={false} />
+          <Area
+            isAnimationActive={false}
+            type="monotone"
+            dataKey="avgSunlightWm2"
+            stroke="var(--status-orange-text)"
+            strokeWidth={2}
+            fill="var(--status-orange-text)"
+            fillOpacity={fillOpacity}
+            name="Average"
+          />
           <Line
             isAnimationActive={false}
             type="monotone"
             dataKey="peakSunlightWm2"
             stroke="var(--status-orange-text)"
-            strokeWidth={2}
+            strokeWidth={1.5}
+            strokeDasharray="6 4"
             dot={false}
             name="Peak"
           />

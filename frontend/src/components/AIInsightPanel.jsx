@@ -56,7 +56,7 @@ export default function AIInsightPanel() {
           borderRadius: '8px',
           border: '1px solid var(--border)',
           cursor: 'pointer',
-          backgroundColor: open ? 'var(--accent-purple)' : 'var(--surface)',
+          backgroundColor: open ? 'var(--ai-accent)' : 'var(--surface)',
           color: open ? '#fff' : 'var(--text-secondary)',
         }}
       >
@@ -68,7 +68,7 @@ export default function AIInsightPanel() {
         <div
           className="gbtac-fade-in"
           style={{
-            backgroundColor: 'var(--accent-purple)',
+            backgroundColor: 'var(--ai-accent)',
             color: '#fff',
             borderRadius: '10px',
             padding: '18px 20px',

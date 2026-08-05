@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTheme } from '../ThemeContext';
 
 // Shared data-fetch + loading/error state for all Recharts views — mirrors
 // the pattern ForecastChart.jsx already established (loading/error/data
@@ -66,6 +67,16 @@ export function ChartStatus({ loading, error, loadingLabel = 'Loading chart…' 
 // server-side (unlike /ai/predict, which already slices to YYYY-MM-DD).
 export function shortDate(isoLike) {
   return String(isoLike).slice(0, 10);
+}
+
+// A translucent fill blended over a near-black surface reads noticeably
+// fainter than the same alpha over white — dark mode needs a higher
+// fillOpacity to look equally present, not a flat reuse of the light-mode
+// value. Scales up only in dark mode so the already-approved light-mode
+// look is untouched.
+export function useFillOpacity(base) {
+  const { theme } = useTheme();
+  return theme === 'dark' ? Math.min(base * 1.6, 0.9) : base;
 }
 
 export const chartCardStyle = {

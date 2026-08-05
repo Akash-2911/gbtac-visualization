@@ -1,8 +1,9 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { chartCardStyle, chartTitleStyle } from './chartUtils';
+import { chartCardStyle, chartTitleStyle, useFillOpacity } from './chartUtils';
 
 export default function EmissionsChart({ data, totalCo2Kg }) {
+  const fillOpacity = useFillOpacity(0.15);
   return (
     <div style={chartCardStyle}>
       <h3 style={chartTitleStyle}>Daily CO2 Emissions</h3>
@@ -22,7 +23,7 @@ export default function EmissionsChart({ data, totalCo2Kg }) {
             stroke="var(--status-red-text)"
             strokeWidth={2}
             fill="var(--status-red-text)"
-            fillOpacity={0.15}
+            fillOpacity={fillOpacity}
             name="kg CO2e"
           />
         </AreaChart>

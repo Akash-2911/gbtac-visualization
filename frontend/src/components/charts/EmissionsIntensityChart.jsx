@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { chartCardStyle, chartTitleStyle } from './chartUtils';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { chartCardStyle, chartTitleStyle, useFillOpacity } from './chartUtils';
 
 export default function EmissionsIntensityChart({ data }) {
   const chartData = useMemo(
@@ -12,11 +12,12 @@ export default function EmissionsIntensityChart({ data }) {
     [data]
   );
 
+  const fillOpacity = useFillOpacity(0.15);
   return (
     <div style={chartCardStyle}>
       <h3 style={chartTitleStyle}>CO2 Intensity (kg per kWh)</h3>
       <ResponsiveContainer width="100%" height={280}>
-        <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+        <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey="date" tick={{ fontSize: 11 }} />
           <YAxis tick={{ fontSize: 11 }} width={55} />
@@ -24,8 +25,17 @@ export default function EmissionsIntensityChart({ data }) {
             contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', fontSize: '12px' }}
             formatter={(value) => [`${value.toFixed(3)} kg/kWh`, 'Intensity']}
           />
-          <Line type="monotone" dataKey="intensity" stroke="var(--status-red-text)" strokeWidth={2} dot={false} name="kg CO2e / kWh" isAnimationActive={false} />
-        </LineChart>
+          <Area
+            isAnimationActive={false}
+            type="monotone"
+            dataKey="intensity"
+            stroke="var(--status-red-text)"
+            strokeWidth={2}
+            fill="var(--status-red-text)"
+            fillOpacity={fillOpacity}
+            name="kg CO2e / kWh"
+          />
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );

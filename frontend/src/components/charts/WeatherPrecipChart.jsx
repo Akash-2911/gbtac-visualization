@@ -15,7 +15,7 @@ export default function WeatherPrecipChart({ data }) {
             contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', fontSize: '12px' }}
             formatter={(value) => [`${value.toFixed(1)} mm`, 'Precipitation']}
           />
-          <Bar dataKey="totalPrecipMm" fill="var(--accent-blue)" radius={[4, 4, 0, 0]} name="Precipitation" isAnimationActive={false} />
+          <Bar dataKey="totalPrecipMm" fill="var(--accent-teal)" radius={[4, 4, 0, 0]} name="Precipitation" isAnimationActive={false} />
         </BarChart>
       </ResponsiveContainer>
     </div>
