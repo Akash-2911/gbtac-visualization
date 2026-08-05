@@ -1,12 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Sparkles, BarChart3, LayoutDashboard } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { BarChart3, LayoutDashboard } from 'lucide-react';
 import PowerBIReport from '../components/PowerBIReport';
 import PageContainer from '../components/PageContainer';
 import ReportCard from '../components/ReportCard';
 import ViewToggle from '../components/ViewToggle';
+import AIInsightPanel from '../components/AIInsightPanel';
+import DateRangeFilter from '../components/charts/DateRangeFilter';
 import CompareChart from '../components/charts/CompareChart';
-import { fetchAiSummary } from '../services/aiService';
-import { highlightMetrics } from '../components/highlightMetrics';
+import CompareNetEnergyChart from '../components/charts/CompareNetEnergyChart';
+import CompareSelfSufficiencyChart from '../components/charts/CompareSelfSufficiencyChart';
+import EnergyBreakdownChart from '../components/charts/EnergyBreakdownChart';
+import EnergyBySystemChart from '../components/charts/EnergyBySystemChart';
+import SolarChart from '../components/charts/SolarChart';
+import SolarCollectorTotalsChart from '../components/charts/SolarCollectorTotalsChart';
+import CumulativeChart from '../components/charts/shared/CumulativeChart';
+import { useChartData, ChartStatus, shortDate, chartCardStyle } from '../components/charts/chartUtils';
+import { fetchCompareData } from '../services/dataService';
 
 const views = [
   { key: 'energyVsSolar', label: 'Energy vs Solar' },
@@ -18,129 +27,119 @@ const CHART_VIEW_OPTIONS = [
   { value: 'recharts', label: 'Recharts', icon: <BarChart3 size={14} /> },
 ];
 
+function CompareRechartsView({ activeView }) {
+  const [range, setRange] = useState({ from: undefined, to: undefined });
+  const { data, error, loading } = useChartData(() => fetchCompareData(range), [range.from, range.to]);
+
+  const energyVsSolar = useMemo(() => {
+    if (!data) return [];
+    return data.energyVsSolar.map((r) => ({ ...r, date: shortDate(r.date) }));
+  }, [data]);
+
+  const greenhouseRecords = useMemo(() => {
+    if (!data) return [];
+    return data.greenhouse.dailyRecords.map((r) => ({ ...r, date: shortDate(r.date) }));
+  }, [data]);
+
+  const solarRecords = useMemo(() => {
+    if (!data) return [];
+    return data.solar.dailyRecords.map((r) => ({ ...r, date: shortDate(r.date) }));
+  }, [data]);
+
+  const cumulativeNetInput = useMemo(
+    () => energyVsSolar.map((r) => ({ date: r.date, value: r.solarKwh - r.energyKwh })),
+    [energyVsSolar]
+  );
+
+  return (
+    <div>
+      <DateRangeFilter range={range} onChange={setRange} />
+      {(loading || error) && (
+        <div style={chartCardStyle}>
+          <ChartStatus loading={loading} error={error} loadingLabel="Loading comparison data…" />
+        </div>
+      )}
+      {!loading && !error && data && activeView === 'energyVsSolar' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <CompareChart data={energyVsSolar} totalEnergyKwh={data.greenhouse.totalKwh} totalSolarKwh={data.solar.totalKwh} />
+          <CompareNetEnergyChart data={energyVsSolar} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+            <CumulativeChart
+              data={cumulativeNetInput}
+              title="Cumulative Net Energy"
+              label="Cumulative Net"
+              color="var(--accent-purple)"
+              unit="kWh"
+              showZeroLine
+            />
+            <CompareSelfSufficiencyChart data={energyVsSolar} />
+          </div>
+        </div>
+      )}
+      {!loading && !error && data && activeView === 'energySolarBreakdown' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <EnergyBreakdownChart dailyRecords={greenhouseRecords} />
+          <SolarChart data={solarRecords} totalKwh={data.solar.totalKwh} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+            <EnergyBySystemChart dailyRecords={greenhouseRecords} />
+            <SolarCollectorTotalsChart data={solarRecords} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Compare() {
   const [activeView, setActiveView] = useState('energyVsSolar');
   const [chartView, setChartView] = useState('powerbi');
-  const [insight, setInsight] = useState(null);
-  const [insightError, setInsightError] = useState(null);
-  const [insightLoading, setInsightLoading] = useState(true);
-
-  useEffect(() => {
-    fetchAiSummary()
-      .then((data) => {
-        setInsight(data.insight);
-        setInsightLoading(false);
-      })
-      .catch((e) => {
-        setInsightError(e);
-        setInsightLoading(false);
-      });
-  }, []);
-
-  const renderInsightBody = () => {
-    if (insightLoading) {
-      return (
-        <div
-          style={{
-            height: '18px',
-            width: '80%',
-            borderRadius: '4px',
-            background: 'rgba(255,255,255,0.3)',
-            animation: 'gbtac-pulse 1.2s ease-in-out infinite',
-          }}
-        />
-      );
-    }
-    if (insightError) {
-      if (insightError.status === 403) {
-        return <p style={{ margin: 0, fontSize: '13px' }}>You don't have permission to view AI insights.</p>;
-      }
-      if (insightError.status === 429) {
-        return <p style={{ margin: 0, fontSize: '13px' }}>Please wait a moment — too many requests.</p>;
-      }
-      return <p style={{ margin: 0, fontSize: '13px' }}>Couldn't load AI insight: {insightError.message}</p>;
-    }
-    return (
-      <p className="gbtac-fade-in" style={{ margin: 0, fontSize: '14px', lineHeight: 1.5 }}>
-        {highlightMetrics(insight, { positive: '#86EFAC', negative: '#FCA5A5' })}
-      </p>
-    );
-  };
 
   return (
     <PageContainer title="Compare" subtitle="Energy consumed vs energy generated">
-      {/* AI Insight card */}
-      <div
-        style={{
-          backgroundColor: 'var(--accent-purple)',
-          color: '#fff',
-          borderRadius: '10px',
-          padding: '18px 20px',
-          marginBottom: '20px',
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: '12px',
-        }}
-      >
-        <Sparkles size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
-        <div>
-          <p style={{ margin: '0 0 4px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.04em', opacity: 0.85 }}>
-            AI INSIGHT
-          </p>
-          {renderInsightBody()}
+      <AIInsightPanel />
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+        <ViewToggle value={chartView} onChange={setChartView} options={CHART_VIEW_OPTIONS} />
+
+        <div
+          style={{
+            display: 'inline-flex',
+            backgroundColor: 'var(--bg)',
+            borderRadius: '8px',
+            padding: '4px',
+            marginBottom: '16px',
+          }}
+        >
+          {views.map((view) => (
+            <button
+              key={view.key}
+              type="button"
+              onClick={() => setActiveView(view.key)}
+              style={{
+                padding: '8px 16px',
+                fontSize: '13px',
+                fontWeight: 600,
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer',
+                backgroundColor: activeView === view.key ? 'var(--accent-blue)' : 'transparent',
+                color: activeView === view.key ? '#fff' : 'var(--text-secondary)',
+                transition: 'background-color 0.15s',
+              }}
+            >
+              {view.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <ViewToggle value={chartView} onChange={setChartView} options={CHART_VIEW_OPTIONS} />
-
       {chartView === 'powerbi' ? (
-        <>
-          <div
-            style={{
-              display: 'inline-flex',
-              backgroundColor: 'var(--bg)',
-              borderRadius: '8px',
-              padding: '4px',
-              marginBottom: '16px',
-              alignSelf: 'flex-start',
-            }}
-          >
-            {views.map((view) => (
-              <button
-                key={view.key}
-                type="button"
-                onClick={() => setActiveView(view.key)}
-                style={{
-                  padding: '8px 16px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  borderRadius: '6px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  backgroundColor: activeView === view.key ? 'var(--accent-blue)' : 'transparent',
-                  color: activeView === view.key ? '#fff' : 'var(--text-secondary)',
-                  transition: 'background-color 0.15s',
-                }}
-              >
-                {view.label}
-              </button>
-            ))}
-          </div>
-
-          <ReportCard>
-            <PowerBIReport reportKey={activeView} />
-          </ReportCard>
-        </>
+        <ReportCard>
+          <PowerBIReport reportKey={activeView} />
+        </ReportCard>
       ) : (
-        <CompareChart />
+        <CompareRechartsView activeView={activeView} />
       )}
-
-      <style>{`
-        @keyframes gbtac-pulse {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 0.6; }
-        }
-      `}</style>
     </PageContainer>
   );
 }

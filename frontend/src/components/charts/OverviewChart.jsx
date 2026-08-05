@@ -1,8 +1,6 @@
 import React from 'react';
 import { Zap, Sun, Activity, Cloud } from 'lucide-react';
-import { fetchSummaryData } from '../../services/dataService';
-import { useChartData, ChartStatus, chartCardStyle } from './chartUtils';
-import CompareChart from './CompareChart';
+import { chartCardStyle } from './chartUtils';
 
 const TILES = [
   { key: 'totalEnergyUsedKwh', label: 'Total Energy Used', unit: 'kWh', icon: Zap },
@@ -36,22 +34,12 @@ function StatTile({ label, value, unit, Icon }) {
   );
 }
 
-export default function OverviewChart() {
-  const { data, error, loading } = useChartData(fetchSummaryData);
-
-  const status = <ChartStatus loading={loading} error={error} loadingLabel="Loading summary…" />;
-  if (loading || error) {
-    return <div style={chartCardStyle}>{status}</div>;
-  }
-
+export default function OverviewChart({ summary }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-        {TILES.map((tile) => (
-          <StatTile key={tile.key} label={tile.label} value={data[tile.key] || 0} unit={tile.unit} Icon={tile.icon} />
-        ))}
-      </div>
-      <CompareChart />
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+      {TILES.map((tile) => (
+        <StatTile key={tile.key} label={tile.label} value={summary[tile.key] || 0} unit={tile.unit} Icon={tile.icon} />
+      ))}
     </div>
   );
 }
