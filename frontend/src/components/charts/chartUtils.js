@@ -3,7 +3,14 @@ import { useEffect, useState } from 'react';
 // Shared data-fetch + loading/error state for all Recharts views — mirrors
 // the pattern ForecastChart.jsx already established (loading/error/data
 // states, 403/429-aware error messages).
-export function useChartData(fetchFn) {
+//
+// `deps` explicitly controls when to refetch (e.g. [range.from, range.to])
+// rather than relying on fetchFn's identity — callers pass a fresh closure
+// each render (`() => fetchGreenhouseData(range)`), so keying off fetchFn
+// itself would refetch every render. This project doesn't have the
+// react-hooks eslint plugin configured, so there's no exhaustive-deps
+// warning to satisfy either way.
+export function useChartData(fetchFn, deps = []) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,7 +35,7 @@ export function useChartData(fetchFn) {
     return () => {
       cancelled = true;
     };
-  }, [fetchFn]);
+  }, deps);
 
   return { data, error, loading };
 }
