@@ -1,25 +1,56 @@
-import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import React, { useState } from 'react';
 import { chartCardStyle, chartTitleStyle } from '../chartUtils';
 
-// Generic "total by category over the selected range" bar chart — reused
-// for energy-by-system and solar-by-collector period totals.
-export default function CategoryTotalsChart({ data, title, color, unit }) {
+// Generic "share of total by category" stacked bar — reused for
+// energy-by-system and solar-by-collector period totals. This is a
+// part-to-whole job, and the dataviz skill's form rules point at a
+// 100%-width stacked bar for that (not a pie — a 2-slice pie, i.e. Solar's
+// collectors, is explicitly called out as the wrong form there). Segment
+// colors come from the caller (data[].color) so each category keeps its
+// established identity color instead of one flat hue.
+export default function CategoryTotalsChart({ data, title, unit }) {
+  const [hoverIdx, setHoverIdx] = useState(null);
+  const total = data.reduce((sum, d) => sum + (d.value || 0), 0);
+
   return (
     <div style={chartCardStyle}>
       <h3 style={chartTitleStyle}>{title}</h3>
-      <ResponsiveContainer width="100%" height={280}>
-        <BarChart data={data} layout="vertical" margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-          <XAxis type="number" tick={{ fontSize: 11 }} />
-          <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={110} />
-          <Tooltip
-            contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', fontSize: '12px' }}
-            formatter={(value) => [`${value.toFixed(1)} ${unit}`, 'Total']}
-          />
-          <Bar dataKey="value" fill={color} radius={[0, 4, 4, 0]} isAnimationActive={false} />
-        </BarChart>
-      </ResponsiveContainer>
+      <div style={{ display: 'flex', height: '34px', borderRadius: '6px', overflow: 'hidden' }}>
+        {data.map((d, i) => {
+          const pct = total > 0 ? (d.value / total) * 100 : 0;
+          return (
+            <div
+              key={d.name}
+              title={`${d.name}: ${d.value.toFixed(1)} ${unit} (${pct.toFixed(0)}%)`}
+              onMouseEnter={() => setHoverIdx(i)}
+              onMouseLeave={() => setHoverIdx(null)}
+              style={{
+                width: `${pct}%`,
+                backgroundColor: d.color,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#fff',
+                boxShadow: i > 0 ? '-2px 0 0 var(--surface)' : 'none',
+                opacity: hoverIdx === null || hoverIdx === i ? 1 : 0.55,
+                transition: 'opacity 0.15s',
+              }}
+            >
+              {pct >= 10 ? `${pct.toFixed(0)}%` : ''}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', marginTop: '12px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+        {data.map((d) => (
+          <span key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ width: '9px', height: '9px', borderRadius: '2px', backgroundColor: d.color, display: 'inline-block', flexShrink: 0 }} />
+            {d.name} — {d.value.toFixed(0)} {unit}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }

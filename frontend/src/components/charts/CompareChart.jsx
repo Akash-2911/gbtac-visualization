@@ -2,7 +2,7 @@ import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { chartCardStyle, chartTitleStyle } from './chartUtils';
 
-export default function CompareChart({ data, totalEnergyKwh, totalSolarKwh }) {
+export default function CompareChart({ data }) {
   return (
     <div style={chartCardStyle}>
       <h3 style={chartTitleStyle}>Energy Consumed vs Solar Generated</h3>
@@ -28,11 +28,6 @@ export default function CompareChart({ data, totalEnergyKwh, totalSolarKwh }) {
           />
         </LineChart>
       </ResponsiveContainer>
-      {totalEnergyKwh != null && totalSolarKwh != null && (
-        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '10px', marginBottom: 0 }}>
-          Total consumed: {totalEnergyKwh.toFixed(0)} kWh · Total generated: {totalSolarKwh.toFixed(0)} kWh
-        </p>
-      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart3, LayoutDashboard } from 'lucide-react';
+import { BarChart3, LayoutDashboard, Sun } from 'lucide-react';
 import PowerBIReport from '../components/PowerBIReport';
 import PageContainer from '../components/PageContainer';
 import ReportCard from '../components/ReportCard';
@@ -10,7 +10,8 @@ import SolarChart from '../components/charts/SolarChart';
 import SolarSunlightChart from '../components/charts/SolarSunlightChart';
 import SolarCollectorTotalsChart from '../components/charts/SolarCollectorTotalsChart';
 import ScatterCorrelationChart from '../components/charts/shared/ScatterCorrelationChart';
-import { useChartData, ChartStatus, shortDate, chartCardStyle } from '../components/charts/chartUtils';
+import StatTile from '../components/charts/shared/StatTile';
+import { useChartData, ChartStatus, shortDate, chartCardStyle, computeTrend } from '../components/charts/chartUtils';
 import { fetchSolarData } from '../services/dataService';
 
 const VIEW_OPTIONS = [
@@ -26,6 +27,7 @@ function SolarRechartsView() {
     if (!data) return [];
     return data.dailyRecords.map((r) => ({ ...r, date: shortDate(r.date) }));
   }, [data]);
+  const trend = useMemo(() => (data ? computeTrend(data.dailyRecords, 'totalKwh') : null), [data]);
 
   return (
     <div>
@@ -33,7 +35,8 @@ function SolarRechartsView() {
       {(loading || error) && <div style={chartCardStyle}><ChartStatus loading={loading} error={error} loadingLabel="Loading solar data…" /></div>}
       {!loading && !error && data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <SolarChart data={dailyRecords} totalKwh={data.totalKwh} />
+          <StatTile label="Total Solar Generated" value={data.totalKwh} unit="kWh" Icon={Sun} trend={trend} goodDirection="up" />
+          <SolarChart data={dailyRecords} />
           <SolarSunlightChart data={dailyRecords} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
             <SolarCollectorTotalsChart data={dailyRecords} />

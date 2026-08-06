@@ -9,10 +9,10 @@ export default function EnergyBySystemChart({ dailyRecords }) {
       const grouped = groupBreakdown(r.breakdown);
       for (const key of Object.keys(totals)) totals[key] += grouped[key];
     }
-    return ENERGY_GROUPS.map((group) => ({ name: group.name, value: totals[group.key] }));
+    return ENERGY_GROUPS.map((group) => ({ name: group.name, value: totals[group.key], color: group.color }));
   }, [dailyRecords]);
 
   return (
-    <CategoryTotalsChart data={data} title="Total Energy by System (selected range)" color="var(--accent-purple)" unit="kWh" />
+    <CategoryTotalsChart data={data} title="Total Energy by System — share of range" unit="kWh" />
   );
 }

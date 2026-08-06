@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart3, LayoutDashboard } from 'lucide-react';
+import { BarChart3, LayoutDashboard, Cloud } from 'lucide-react';
 import PowerBIReport from '../components/PowerBIReport';
 import PageContainer from '../components/PageContainer';
 import ReportCard from '../components/ReportCard';
@@ -8,9 +8,11 @@ import AIInsightPanel from '../components/AIInsightPanel';
 import DateRangeFilter from '../components/charts/DateRangeFilter';
 import EmissionsChart from '../components/charts/EmissionsChart';
 import EmissionsIntensityChart from '../components/charts/EmissionsIntensityChart';
+import EmissionsMonthlyChart from '../components/charts/EmissionsMonthlyChart';
 import CumulativeChart from '../components/charts/shared/CumulativeChart';
 import ScatterCorrelationChart from '../components/charts/shared/ScatterCorrelationChart';
-import { useChartData, ChartStatus, shortDate, chartCardStyle } from '../components/charts/chartUtils';
+import StatTile from '../components/charts/shared/StatTile';
+import { useChartData, ChartStatus, shortDate, chartCardStyle, computeTrend } from '../components/charts/chartUtils';
 import { fetchEmissionsData } from '../services/dataService';
 
 const VIEW_OPTIONS = [
@@ -28,6 +30,7 @@ function EmissionsRechartsView() {
   }, [data]);
 
   const cumulativeInput = useMemo(() => dailyRecords.map((r) => ({ date: r.date, value: r.kgCo2e })), [dailyRecords]);
+  const trend = useMemo(() => (data ? computeTrend(data.dailyRecords, 'kgCo2e') : null), [data]);
 
   return (
     <div>
@@ -35,7 +38,8 @@ function EmissionsRechartsView() {
       {(loading || error) && <div style={chartCardStyle}><ChartStatus loading={loading} error={error} loadingLabel="Loading emissions data…" /></div>}
       {!loading && !error && data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <EmissionsChart data={dailyRecords} totalCo2Kg={data.totalCo2Kg} />
+          <StatTile label="Total CO2 Emissions" value={data.totalCo2Kg} unit="kg" Icon={Cloud} trend={trend} goodDirection="down" />
+          <EmissionsChart data={dailyRecords} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
             <EmissionsIntensityChart data={dailyRecords} />
             <CumulativeChart
@@ -45,6 +49,7 @@ function EmissionsRechartsView() {
               color="var(--status-red-text)"
               unit="kg"
             />
+            <EmissionsMonthlyChart dailyRecords={dailyRecords} />
           </div>
           <ScatterCorrelationChart
             data={dailyRecords}

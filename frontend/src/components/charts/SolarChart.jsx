@@ -2,7 +2,7 @@ import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { chartCardStyle, chartTitleStyle, useFillOpacity } from './chartUtils';
 
-export default function SolarChart({ data, totalKwh }) {
+export default function SolarChart({ data }) {
   const collector1Opacity = useFillOpacity(0.25);
   const collector2Opacity = useFillOpacity(0.4);
   return (
@@ -42,9 +42,6 @@ export default function SolarChart({ data, totalKwh }) {
           />
         </AreaChart>
       </ResponsiveContainer>
-      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '10px', marginBottom: 0 }}>
-        Total: {totalKwh.toFixed(0)} kWh across {data.length} days
-      </p>
     </div>
   );
 }

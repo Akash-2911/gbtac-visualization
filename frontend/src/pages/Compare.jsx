@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart3, LayoutDashboard } from 'lucide-react';
+import { BarChart3, LayoutDashboard, Zap, Sun } from 'lucide-react';
 import PowerBIReport from '../components/PowerBIReport';
 import PageContainer from '../components/PageContainer';
 import ReportCard from '../components/ReportCard';
@@ -14,7 +14,9 @@ import EnergyBySystemChart from '../components/charts/EnergyBySystemChart';
 import SolarChart from '../components/charts/SolarChart';
 import SolarCollectorTotalsChart from '../components/charts/SolarCollectorTotalsChart';
 import CumulativeChart from '../components/charts/shared/CumulativeChart';
-import { useChartData, ChartStatus, shortDate, chartCardStyle } from '../components/charts/chartUtils';
+import StatTile from '../components/charts/shared/StatTile';
+import Meter from '../components/charts/shared/Meter';
+import { useChartData, ChartStatus, shortDate, chartCardStyle, computeTrend } from '../components/charts/chartUtils';
 import { fetchCompareData } from '../services/dataService';
 
 const views = [
@@ -51,6 +53,13 @@ function CompareRechartsView({ activeView }) {
     [energyVsSolar]
   );
 
+  const energyTrend = useMemo(() => (data ? computeTrend(data.greenhouse.dailyRecords, 'totalKwh') : null), [data]);
+  const solarTrend = useMemo(() => (data ? computeTrend(data.solar.dailyRecords, 'totalKwh') : null), [data]);
+  const selfSufficiencyPct = useMemo(() => {
+    if (!data || !data.greenhouse.totalKwh) return null;
+    return (data.solar.totalKwh / data.greenhouse.totalKwh) * 100;
+  }, [data]);
+
   return (
     <div>
       <DateRangeFilter range={range} onChange={setRange} />
@@ -59,9 +68,20 @@ function CompareRechartsView({ activeView }) {
           <ChartStatus loading={loading} error={error} loadingLabel="Loading comparison data…" />
         </div>
       )}
+      {!loading && !error && data && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
+          <StatTile label="Total Energy Consumed" value={data.greenhouse.totalKwh} unit="kWh" Icon={Zap} trend={energyTrend} goodDirection="down" />
+          <StatTile label="Total Solar Generated" value={data.solar.totalKwh} unit="kWh" Icon={Sun} trend={solarTrend} goodDirection="up" />
+        </div>
+      )}
+      {!loading && !error && data && selfSufficiencyPct !== null && (
+        <div style={{ marginBottom: '16px' }}>
+          <Meter title="Solar Self-Sufficiency (selected range)" pct={selfSufficiencyPct} caption="Target: 100% (net-zero) — solar generated ÷ energy consumed" />
+        </div>
+      )}
       {!loading && !error && data && activeView === 'energyVsSolar' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <CompareChart data={energyVsSolar} totalEnergyKwh={data.greenhouse.totalKwh} totalSolarKwh={data.solar.totalKwh} />
+          <CompareChart data={energyVsSolar} />
           <CompareNetEnergyChart data={energyVsSolar} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
             <CumulativeChart
@@ -79,7 +99,7 @@ function CompareRechartsView({ activeView }) {
       {!loading && !error && data && activeView === 'energySolarBreakdown' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <EnergyBreakdownChart dailyRecords={greenhouseRecords} />
-          <SolarChart data={solarRecords} totalKwh={data.solar.totalKwh} />
+          <SolarChart data={solarRecords} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
             <EnergyBySystemChart dailyRecords={greenhouseRecords} />
             <SolarCollectorTotalsChart data={solarRecords} />
