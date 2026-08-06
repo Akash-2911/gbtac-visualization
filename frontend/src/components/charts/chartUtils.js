@@ -79,6 +79,24 @@ export function useFillOpacity(base) {
   return theme === 'dark' ? Math.min(base * 1.6, 0.9) : base;
 }
 
+// Day-over-day trend for a KPI tile, computed from daily records already
+// fetched for that page's chart — no extra request. Returns null (no
+// arrow shown) when there isn't a real prior day to compare against,
+// rather than fabricating a comparison.
+export function computeTrend(dailyRecords, valueKey) {
+  if (!dailyRecords || dailyRecords.length < 2) return null;
+  const sorted = [...dailyRecords].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const last = sorted[sorted.length - 1];
+  const prev = sorted[sorted.length - 2];
+  const lastVal = last[valueKey] || 0;
+  const prevVal = prev[valueKey] || 0;
+  if (lastVal === prevVal) return { direction: 'flat', deltaPct: 0 };
+  return {
+    direction: lastVal > prevVal ? 'up' : 'down',
+    deltaPct: prevVal !== 0 ? ((lastVal - prevVal) / prevVal) * 100 : null,
+  };
+}
+
 export const chartCardStyle = {
   backgroundColor: 'var(--surface)',
   borderRadius: '10px',

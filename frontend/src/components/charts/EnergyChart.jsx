@@ -5,7 +5,7 @@ import { chartCardStyle, chartTitleStyle, useFillOpacity } from './chartUtils';
 // Presentational — receives already-fetched daily records (page-level
 // fetch is shared across this page's other charts) rather than fetching
 // its own copy of the same endpoint.
-export default function EnergyChart({ data, totalKwh }) {
+export default function EnergyChart({ data }) {
   const fillOpacity = useFillOpacity(0.15);
   return (
     <div style={chartCardStyle}>
@@ -31,9 +31,6 @@ export default function EnergyChart({ data, totalKwh }) {
           />
         </AreaChart>
       </ResponsiveContainer>
-      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '10px', marginBottom: 0 }}>
-        Total: {totalKwh.toFixed(0)} kWh across {data.length} days
-      </p>
     </div>
   );
 }

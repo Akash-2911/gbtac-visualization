@@ -9,7 +9,7 @@ import OverviewChart from '../components/charts/OverviewChart';
 import CompareChart from '../components/charts/CompareChart';
 import EnergyBreakdownChart from '../components/charts/EnergyBreakdownChart';
 import EmissionsChart from '../components/charts/EmissionsChart';
-import { useChartData, ChartStatus, shortDate, chartCardStyle } from '../components/charts/chartUtils';
+import { useChartData, ChartStatus, shortDate, chartCardStyle, computeTrend } from '../components/charts/chartUtils';
 import { fetchOverviewData } from '../services/dataService';
 
 const VIEW_OPTIONS = [
@@ -36,16 +36,28 @@ function OverviewRechartsView() {
     return data.emissions.dailyRecords.map((r) => ({ ...r, date: shortDate(r.date) }));
   }, [data]);
 
+  const trends = useMemo(() => {
+    if (!data) return {};
+    return {
+      totalEnergyUsedKwh: computeTrend(data.greenhouse.dailyRecords, 'totalKwh'),
+      totalSolarGeneratedKwh: computeTrend(data.solar.dailyRecords, 'totalKwh'),
+      totalCo2EmissionsKg: computeTrend(data.emissions.dailyRecords, 'kgCo2e'),
+      // No daily breakdown of peak demand is fetched on this page, so no
+      // entry here — OverviewChart shows no trend arrow for that tile
+      // rather than fabricating one.
+    };
+  }, [data]);
+
   return (
     <div>
       <DateRangeFilter range={range} onChange={setRange} />
       {(loading || error) && <div style={chartCardStyle}><ChartStatus loading={loading} error={error} loadingLabel="Loading overview…" /></div>}
       {!loading && !error && data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <OverviewChart summary={data.summary} />
-          <CompareChart data={energyVsSolar} totalEnergyKwh={data.greenhouse.totalKwh} totalSolarKwh={data.solar.totalKwh} />
+          <OverviewChart summary={data.summary} trends={trends} />
+          <CompareChart data={energyVsSolar} />
           <EnergyBreakdownChart dailyRecords={greenhouseRecords} />
-          <EmissionsChart data={emissionsRecords} totalCo2Kg={data.emissions.totalCo2Kg} />
+          <EmissionsChart data={emissionsRecords} />
         </div>
       )}
     </div>

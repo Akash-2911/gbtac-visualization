@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { TrendingUp, BarChart3, LayoutDashboard } from 'lucide-react';
+import { TrendingUp, BarChart3, LayoutDashboard, Zap } from 'lucide-react';
 import PowerBIReport from '../components/PowerBIReport';
 import PageContainer from '../components/PageContainer';
 import ReportCard from '../components/ReportCard';
@@ -11,7 +11,8 @@ import EnergyChart from '../components/charts/EnergyChart';
 import EnergyBreakdownChart from '../components/charts/EnergyBreakdownChart';
 import EnergyBySystemChart from '../components/charts/EnergyBySystemChart';
 import CumulativeChart from '../components/charts/shared/CumulativeChart';
-import { useChartData, ChartStatus, shortDate, chartCardStyle } from '../components/charts/chartUtils';
+import StatTile from '../components/charts/shared/StatTile';
+import { useChartData, ChartStatus, shortDate, chartCardStyle, computeTrend } from '../components/charts/chartUtils';
 import { fetchGreenhouseData } from '../services/dataService';
 
 const VIEW_OPTIONS = [
@@ -29,6 +30,7 @@ function EnergyRechartsView() {
   }, [data]);
 
   const cumulativeInput = useMemo(() => dailyRecords.map((r) => ({ date: r.date, value: r.totalKwh })), [dailyRecords]);
+  const trend = useMemo(() => (data ? computeTrend(data.dailyRecords, 'totalKwh') : null), [data]);
 
   return (
     <div>
@@ -36,7 +38,8 @@ function EnergyRechartsView() {
       {(loading || error) && <div style={chartCardStyle}><ChartStatus loading={loading} error={error} loadingLabel="Loading energy data…" /></div>}
       {!loading && !error && data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <EnergyChart data={dailyRecords} totalKwh={data.totalKwh} />
+          <StatTile label="Total Energy Used" value={data.totalKwh} unit="kWh" Icon={Zap} trend={trend} goodDirection="down" />
+          <EnergyChart data={dailyRecords} />
           <EnergyBreakdownChart dailyRecords={dailyRecords} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
             <EnergyBySystemChart dailyRecords={dailyRecords} />
