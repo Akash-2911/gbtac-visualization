@@ -2,10 +2,31 @@ import React from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ZAxis, ResponsiveContainer } from 'recharts';
 import { chartCardStyle, chartTitleStyle } from '../chartUtils';
 
+// A scatter's two axes are magnitudes, not a date, so it can't trigger a
+// date selection itself — it only reacts, emphasizing the point for
+// whatever date got selected on another chart on the page.
+function selectableDot(color, selectedDate) {
+  return (props) => {
+    const { cx, cy, payload } = props;
+    const isSelected = selectedDate && payload.date === selectedDate;
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={isSelected ? 7 : 4}
+        fill={color}
+        fillOpacity={isSelected ? 1 : 0.65}
+        stroke={isSelected ? 'var(--text-primary)' : 'none'}
+        strokeWidth={isSelected ? 1.5 : 0}
+      />
+    );
+  };
+}
+
 // Generic x/y relationship scatter — reused for sunlight-vs-generation and
 // energy-vs-emissions. Two magnitude measures of different units belong on
 // a scatter (each its own axis) rather than forced onto one shared axis.
-export default function ScatterCorrelationChart({ data, title, xKey, yKey, xLabel, yLabel, color }) {
+export default function ScatterCorrelationChart({ data, title, xKey, yKey, xLabel, yLabel, color, selectedDate }) {
   return (
     <div style={chartCardStyle}>
       <h3 style={chartTitleStyle}>{title}</h3>
@@ -32,7 +53,7 @@ export default function ScatterCorrelationChart({ data, title, xKey, yKey, xLabe
             cursor={{ strokeDasharray: '3 3' }}
             contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', fontSize: '12px' }}
           />
-          <Scatter data={data} fill={color} fillOpacity={0.65} isAnimationActive={false} />
+          <Scatter data={data} fill={color} fillOpacity={0.65} isAnimationActive={false} shape={selectableDot(color, selectedDate)} />
         </ScatterChart>
       </ResponsiveContainer>
     </div>

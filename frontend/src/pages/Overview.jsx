@@ -9,7 +9,16 @@ import OverviewChart from '../components/charts/OverviewChart';
 import CompareChart from '../components/charts/CompareChart';
 import EnergyBreakdownChart from '../components/charts/EnergyBreakdownChart';
 import EmissionsChart from '../components/charts/EmissionsChart';
-import { useChartData, ChartStatus, shortDate, chartCardStyle, computeTrend } from '../components/charts/chartUtils';
+import {
+  useChartData,
+  ChartStatus,
+  shortDate,
+  chartCardStyle,
+  computeTrend,
+  useDateSelection,
+  useValidSelectedDate,
+  SelectedDateChip,
+} from '../components/charts/chartUtils';
 import { fetchOverviewData } from '../services/dataService';
 
 const VIEW_OPTIONS = [
@@ -48,16 +57,22 @@ function OverviewRechartsView() {
     };
   }, [data]);
 
+  const { selectedDate, toggleDate, clearDate } = useDateSelection();
+  const validSelectedDate = useValidSelectedDate(selectedDate, greenhouseRecords);
+
   return (
     <div>
-      <DateRangeFilter range={range} onChange={setRange} />
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: '10px' }}>
+        <DateRangeFilter range={range} onChange={setRange} />
+        <SelectedDateChip date={validSelectedDate} onClear={clearDate} />
+      </div>
       {(loading || error) && <div style={chartCardStyle}><ChartStatus loading={loading} error={error} loadingLabel="Loading overview…" /></div>}
       {!loading && !error && data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <OverviewChart summary={data.summary} trends={trends} />
-          <CompareChart data={energyVsSolar} />
-          <EnergyBreakdownChart dailyRecords={greenhouseRecords} />
-          <EmissionsChart data={emissionsRecords} />
+          <CompareChart data={energyVsSolar} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
+          <EnergyBreakdownChart dailyRecords={greenhouseRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
+          <EmissionsChart data={emissionsRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
         </div>
       )}
     </div>

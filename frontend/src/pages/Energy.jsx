@@ -12,7 +12,16 @@ import EnergyBreakdownChart from '../components/charts/EnergyBreakdownChart';
 import EnergyBySystemChart from '../components/charts/EnergyBySystemChart';
 import CumulativeChart from '../components/charts/shared/CumulativeChart';
 import StatTile from '../components/charts/shared/StatTile';
-import { useChartData, ChartStatus, shortDate, chartCardStyle, computeTrend } from '../components/charts/chartUtils';
+import {
+  useChartData,
+  ChartStatus,
+  shortDate,
+  chartCardStyle,
+  computeTrend,
+  useDateSelection,
+  useValidSelectedDate,
+  SelectedDateChip,
+} from '../components/charts/chartUtils';
 import { fetchGreenhouseData } from '../services/dataService';
 
 const VIEW_OPTIONS = [
@@ -32,23 +41,31 @@ function EnergyRechartsView() {
   const cumulativeInput = useMemo(() => dailyRecords.map((r) => ({ date: r.date, value: r.totalKwh })), [dailyRecords]);
   const trend = useMemo(() => (data ? computeTrend(data.dailyRecords, 'totalKwh') : null), [data]);
 
+  const { selectedDate, toggleDate, clearDate } = useDateSelection();
+  const validSelectedDate = useValidSelectedDate(selectedDate, dailyRecords);
+
   return (
     <div>
-      <DateRangeFilter range={range} onChange={setRange} />
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: '10px' }}>
+        <DateRangeFilter range={range} onChange={setRange} />
+        <SelectedDateChip date={validSelectedDate} onClear={clearDate} />
+      </div>
       {(loading || error) && <div style={chartCardStyle}><ChartStatus loading={loading} error={error} loadingLabel="Loading energy data…" /></div>}
       {!loading && !error && data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <StatTile label="Total Energy Used" value={data.totalKwh} unit="kWh" Icon={Zap} trend={trend} goodDirection="down" />
-          <EnergyChart data={dailyRecords} />
-          <EnergyBreakdownChart dailyRecords={dailyRecords} />
+          <EnergyChart data={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
+          <EnergyBreakdownChart dailyRecords={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
-            <EnergyBySystemChart dailyRecords={dailyRecords} />
+            <EnergyBySystemChart dailyRecords={dailyRecords} selectedDate={validSelectedDate} />
             <CumulativeChart
               data={cumulativeInput}
               title="Cumulative Energy Consumption"
               label="Cumulative kWh"
               color="var(--accent-purple)"
               unit="kWh"
+              selectedDate={validSelectedDate}
+              onSelectDate={toggleDate}
             />
           </div>
         </div>

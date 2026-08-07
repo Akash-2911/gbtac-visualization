@@ -11,7 +11,16 @@ import SolarSunlightChart from '../components/charts/SolarSunlightChart';
 import SolarCollectorTotalsChart from '../components/charts/SolarCollectorTotalsChart';
 import ScatterCorrelationChart from '../components/charts/shared/ScatterCorrelationChart';
 import StatTile from '../components/charts/shared/StatTile';
-import { useChartData, ChartStatus, shortDate, chartCardStyle, computeTrend } from '../components/charts/chartUtils';
+import {
+  useChartData,
+  ChartStatus,
+  shortDate,
+  chartCardStyle,
+  computeTrend,
+  useDateSelection,
+  useValidSelectedDate,
+  SelectedDateChip,
+} from '../components/charts/chartUtils';
 import { fetchSolarData } from '../services/dataService';
 
 const VIEW_OPTIONS = [
@@ -29,17 +38,23 @@ function SolarRechartsView() {
   }, [data]);
   const trend = useMemo(() => (data ? computeTrend(data.dailyRecords, 'totalKwh') : null), [data]);
 
+  const { selectedDate, toggleDate, clearDate } = useDateSelection();
+  const validSelectedDate = useValidSelectedDate(selectedDate, dailyRecords);
+
   return (
     <div>
-      <DateRangeFilter range={range} onChange={setRange} />
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: '10px' }}>
+        <DateRangeFilter range={range} onChange={setRange} />
+        <SelectedDateChip date={validSelectedDate} onClear={clearDate} />
+      </div>
       {(loading || error) && <div style={chartCardStyle}><ChartStatus loading={loading} error={error} loadingLabel="Loading solar data…" /></div>}
       {!loading && !error && data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <StatTile label="Total Solar Generated" value={data.totalKwh} unit="kWh" Icon={Sun} trend={trend} goodDirection="up" />
-          <SolarChart data={dailyRecords} />
-          <SolarSunlightChart data={dailyRecords} />
+          <SolarChart data={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
+          <SolarSunlightChart data={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
-            <SolarCollectorTotalsChart data={dailyRecords} />
+            <SolarCollectorTotalsChart data={dailyRecords} selectedDate={validSelectedDate} />
             <ScatterCorrelationChart
               data={dailyRecords}
               title="Sunlight vs Generation"
@@ -48,6 +63,7 @@ function SolarRechartsView() {
               xLabel="Avg Sunlight (W/m²)"
               yLabel="Total kWh"
               color="var(--status-orange-text)"
+              selectedDate={validSelectedDate}
             />
           </div>
         </div>

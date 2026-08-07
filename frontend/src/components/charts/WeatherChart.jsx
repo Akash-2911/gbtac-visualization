@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { chartCardStyle, chartTitleStyle, useFillOpacity } from './chartUtils';
+import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, ResponsiveContainer } from 'recharts';
+import { chartCardStyle, chartTitleStyle, useFillOpacity, makeChartClickHandler } from './chartUtils';
 
 // Filled min-max range band (teal min line, orange max line+fill) with a
 // dashed avg line through the middle, instead of three separate plain
@@ -30,7 +30,7 @@ function TempTooltip({ active, payload, label }) {
   );
 }
 
-export default function WeatherChart({ data }) {
+export default function WeatherChart({ data, selectedDate, onSelectDate }) {
   const chartData = useMemo(
     () => data.map((r) => ({ ...r, rangeTempC: r.maxTempC - r.minTempC })),
     [data]
@@ -41,10 +41,16 @@ export default function WeatherChart({ data }) {
     <div style={chartCardStyle}>
       <h3 style={chartTitleStyle}>Daily Temperature Range</h3>
       <ResponsiveContainer width="100%" height={280}>
-        <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+        <ComposedChart
+          data={chartData}
+          margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+          onClick={makeChartClickHandler(onSelectDate)}
+          style={{ cursor: onSelectDate ? 'pointer' : 'default' }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey="date" tick={{ fontSize: 11 }} />
           <YAxis tick={{ fontSize: 11 }} width={50} unit="°C" />
+          {selectedDate && <ReferenceLine x={selectedDate} stroke="var(--text-muted)" strokeDasharray="4 4" />}
           <Tooltip content={<TempTooltip />} />
           <Legend
             wrapperStyle={{ fontSize: '12px' }}

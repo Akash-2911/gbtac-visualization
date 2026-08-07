@@ -1,16 +1,22 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { chartCardStyle, chartTitleStyle } from './chartUtils';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, ResponsiveContainer } from 'recharts';
+import { chartCardStyle, chartTitleStyle, makeChartClickHandler } from './chartUtils';
 
-export default function CompareChart({ data }) {
+export default function CompareChart({ data, selectedDate, onSelectDate }) {
   return (
     <div style={chartCardStyle}>
       <h3 style={chartTitleStyle}>Energy Consumed vs Solar Generated</h3>
       <ResponsiveContainer width="100%" height={340}>
-        <LineChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+        <LineChart
+          data={data}
+          margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+          onClick={makeChartClickHandler(onSelectDate)}
+          style={{ cursor: onSelectDate ? 'pointer' : 'default' }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey="date" tick={{ fontSize: 11 }} />
           <YAxis tick={{ fontSize: 11 }} width={50} />
+          {selectedDate && <ReferenceLine x={selectedDate} stroke="var(--text-muted)" strokeDasharray="4 4" />}
           <Tooltip
             contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', fontSize: '12px' }}
             formatter={(value, name) => [`${value.toFixed(1)} kWh`, name]}
