@@ -1,10 +1,10 @@
 import React from 'react';
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
-import { chartCardStyle } from '../chartUtils';
+import { chartCardStyle, formatShortDate } from '../chartUtils';
 
 // Same KPI tile used on every page's Recharts view (Overview, Energy,
 // Solar, Emissions, Compare) so the "total X, trending up/down vs
-// yesterday" treatment looks identical everywhere instead of drifting
+// [previous day]" treatment looks identical everywhere instead of drifting
 // page to page.
 //
 // `goodDirection` ('up' | 'down' | null) says which direction of change is
@@ -13,9 +13,23 @@ import { chartCardStyle } from '../chartUtils';
 // consumption/emissions (less is good) vs generation (more is good).
 // Pass trend={null} (e.g. no daily breakdown available for this metric)
 // to render the tile with no arrow rather than a fabricated one.
+
+// `trend.prevDate` is the actual previous day in whatever data was
+// fetched, which is only really "yesterday" when no date-range filter (or
+// the default "All" range ending today) is active. Naming the real date
+// instead of always saying "yesterday" keeps the label honest once a
+// narrower range is selected.
+function comparisonLabel(prevDate) {
+  const prev = new Date(`${prevDate}T00:00:00`);
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return prev.toDateString() === yesterday.toDateString() ? 'yesterday' : formatShortDate(prevDate);
+}
+
 function TrendBadge({ trend, goodDirection }) {
   if (!trend) return null;
-  const { direction, deltaPct } = trend;
+  const { direction, deltaPct, prevDate } = trend;
+  const vs = comparisonLabel(prevDate);
 
   let color = 'var(--text-muted)';
   let ArrowIcon = Minus;
@@ -27,8 +41,8 @@ function TrendBadge({ trend, goodDirection }) {
 
   const label =
     direction === 'flat'
-      ? 'No change vs yesterday'
-      : `${deltaPct == null ? '' : `${deltaPct >= 0 ? '+' : ''}${deltaPct.toFixed(1)}%`} vs yesterday`;
+      ? `No change vs ${vs}`
+      : `${deltaPct == null ? '' : `${deltaPct >= 0 ? '+' : ''}${deltaPct.toFixed(1)}%`} vs ${vs}`;
 
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.75rem', fontWeight: 600, color }}>

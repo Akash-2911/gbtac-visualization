@@ -53,7 +53,9 @@ function EmissionsRechartsView() {
       {(loading || error) && <div style={chartCardStyle}><ChartStatus loading={loading} error={error} loadingLabel="Loading emissions data…" /></div>}
       {!loading && !error && data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <StatTile label="Total CO2 Emissions" value={data.totalCo2Kg} unit="kg" Icon={Cloud} trend={trend} goodDirection="down" />
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+            <StatTile label="Total CO2 Emissions" value={data.totalCo2Kg} unit="kg" Icon={Cloud} trend={trend} goodDirection="down" />
+          </div>
           <EmissionsChart data={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
             <EmissionsIntensityChart data={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />

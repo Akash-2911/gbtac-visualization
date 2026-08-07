@@ -18,6 +18,7 @@ import {
   useDateSelection,
   useValidSelectedDate,
   SelectedDateChip,
+  useCategorySelection,
 } from '../components/charts/chartUtils';
 import { fetchOverviewData } from '../services/dataService';
 
@@ -59,6 +60,7 @@ function OverviewRechartsView() {
 
   const { selectedDate, toggleDate, clearDate } = useDateSelection();
   const validSelectedDate = useValidSelectedDate(selectedDate, greenhouseRecords);
+  const { activeCategory, toggleCategory } = useCategorySelection();
 
   return (
     <div>
@@ -71,7 +73,13 @@ function OverviewRechartsView() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <OverviewChart summary={data.summary} trends={trends} />
           <CompareChart data={energyVsSolar} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
-          <EnergyBreakdownChart dailyRecords={greenhouseRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
+          <EnergyBreakdownChart
+            dailyRecords={greenhouseRecords}
+            selectedDate={validSelectedDate}
+            onSelectDate={toggleDate}
+            activeCategory={activeCategory}
+            onToggleCategory={toggleCategory}
+          />
           <EmissionsChart data={emissionsRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
         </div>
       )}
