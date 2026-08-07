@@ -10,7 +10,15 @@ import WeatherChart from '../components/charts/WeatherChart';
 import WeatherPrecipChart from '../components/charts/WeatherPrecipChart';
 import WeatherHumidityChart from '../components/charts/WeatherHumidityChart';
 import CumulativeChart from '../components/charts/shared/CumulativeChart';
-import { useChartData, ChartStatus, shortDate, chartCardStyle } from '../components/charts/chartUtils';
+import {
+  useChartData,
+  ChartStatus,
+  shortDate,
+  chartCardStyle,
+  useDateSelection,
+  useValidSelectedDate,
+  SelectedDateChip,
+} from '../components/charts/chartUtils';
 import { fetchWeatherData } from '../services/dataService';
 
 const VIEW_OPTIONS = [
@@ -32,16 +40,22 @@ function WeatherRechartsView() {
     [dailyRecords]
   );
 
+  const { selectedDate, toggleDate, clearDate } = useDateSelection();
+  const validSelectedDate = useValidSelectedDate(selectedDate, dailyRecords);
+
   return (
     <div>
-      <DateRangeFilter range={range} onChange={setRange} />
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: '10px' }}>
+        <DateRangeFilter range={range} onChange={setRange} />
+        <SelectedDateChip date={validSelectedDate} onClear={clearDate} />
+      </div>
       {(loading || error) && <div style={chartCardStyle}><ChartStatus loading={loading} error={error} loadingLabel="Loading weather data…" /></div>}
       {!loading && !error && data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <WeatherChart data={dailyRecords} />
+          <WeatherChart data={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
-            <WeatherPrecipChart data={dailyRecords} />
-            <WeatherHumidityChart data={dailyRecords} />
+            <WeatherPrecipChart data={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
+            <WeatherHumidityChart data={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
           </div>
           <CumulativeChart
             data={cumulativePrecipInput}
@@ -49,6 +63,8 @@ function WeatherRechartsView() {
             label="Cumulative Precipitation"
             color="var(--accent-teal)"
             unit="mm"
+            selectedDate={validSelectedDate}
+            onSelectDate={toggleDate}
           />
         </div>
       )}

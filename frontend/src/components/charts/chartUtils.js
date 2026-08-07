@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { X } from 'lucide-react';
 import { useTheme } from '../ThemeContext';
 
 // Shared data-fetch + loading/error state for all Recharts views — mirrors
@@ -95,6 +96,68 @@ export function computeTrend(dailyRecords, valueKey) {
     direction: lastVal > prevVal ? 'up' : 'down',
     deltaPct: prevVal !== 0 ? ((lastVal - prevVal) / prevVal) * 100 : null,
   };
+}
+
+// Cross-filter selection ("Model A" — click a date on any trend chart,
+// every other trend chart on the page marks it, category-total charts
+// swap to that single day). One selection per page, toggled by clicking
+// the same date again — mirrors the toggle behavior of every other filter
+// chip in this app.
+export function useDateSelection() {
+  const [selectedDate, setSelectedDate] = useState(null);
+  const toggleDate = (date) => setSelectedDate((prev) => (prev === date ? null : date));
+  const clearDate = () => setSelectedDate(null);
+  return { selectedDate, toggleDate, clearDate };
+}
+
+// A selected date only stays valid while it's actually present in the
+// page's current daily records — if the date range changes underneath it,
+// the selection silently clears instead of pointing at stale/missing data.
+export function useValidSelectedDate(selectedDate, dailyRecords) {
+  return useMemo(
+    () => (selectedDate && dailyRecords.some((r) => r.date === selectedDate) ? selectedDate : null),
+    [selectedDate, dailyRecords]
+  );
+}
+
+// Recharts fires this on any Area/Bar/Line/Composed chart click with the
+// x-axis category under the pointer as `activeLabel`.
+export function makeChartClickHandler(onSelectDate) {
+  if (!onSelectDate) return undefined;
+  return (state) => {
+    if (state && state.activeLabel) onSelectDate(state.activeLabel);
+  };
+}
+
+// Single "clear" affordance for the page's active date selection — sits
+// next to DateRangeFilter so there's always one obvious way out, regardless
+// of which chart the selection came from.
+export function SelectedDateChip({ date, onClear }) {
+  if (!date) return null;
+  return (
+    <button
+      type="button"
+      onClick={onClear}
+      className="gbtac-btn-fx"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '5px',
+        padding: '7px 10px',
+        fontSize: '12px',
+        fontWeight: 600,
+        borderRadius: '8px',
+        border: '1px solid var(--border)',
+        cursor: 'pointer',
+        backgroundColor: 'var(--surface)',
+        color: 'var(--text-secondary)',
+        marginBottom: '16px',
+      }}
+    >
+      {date}
+      <X size={12} />
+    </button>
+  );
 }
 
 export const chartCardStyle = {

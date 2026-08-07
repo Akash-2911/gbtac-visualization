@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer } from 'recharts';
-import { chartCardStyle, chartTitleStyle, useFillOpacity } from './chartUtils';
+import { chartCardStyle, chartTitleStyle, useFillOpacity, makeChartClickHandler } from './chartUtils';
 
-export default function CompareSelfSufficiencyChart({ data }) {
+export default function CompareSelfSufficiencyChart({ data, selectedDate, onSelectDate }) {
   const fillOpacity = useFillOpacity(0.15);
   const chartData = useMemo(
     () =>
@@ -17,7 +17,12 @@ export default function CompareSelfSufficiencyChart({ data }) {
     <div style={chartCardStyle}>
       <h3 style={chartTitleStyle}>Solar Self-Sufficiency</h3>
       <ResponsiveContainer width="100%" height={280}>
-        <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+        <AreaChart
+          data={chartData}
+          margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+          onClick={makeChartClickHandler(onSelectDate)}
+          style={{ cursor: onSelectDate ? 'pointer' : 'default' }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey="date" tick={{ fontSize: 11 }} />
           <YAxis tick={{ fontSize: 11 }} width={50} unit="%" />
@@ -26,6 +31,7 @@ export default function CompareSelfSufficiencyChart({ data }) {
             formatter={(value) => [`${value.toFixed(0)}%`, 'Self-sufficiency']}
           />
           <ReferenceLine y={100} stroke="var(--status-green-text)" strokeDasharray="4 4" label={{ value: '100%', fontSize: 10, fill: 'var(--status-green-text)' }} />
+          {selectedDate && <ReferenceLine x={selectedDate} stroke="var(--text-muted)" strokeDasharray="4 4" />}
           <Area
             isAnimationActive={false}
             type="monotone"

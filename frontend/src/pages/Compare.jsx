@@ -16,7 +16,16 @@ import SolarCollectorTotalsChart from '../components/charts/SolarCollectorTotals
 import CumulativeChart from '../components/charts/shared/CumulativeChart';
 import StatTile from '../components/charts/shared/StatTile';
 import Meter from '../components/charts/shared/Meter';
-import { useChartData, ChartStatus, shortDate, chartCardStyle, computeTrend } from '../components/charts/chartUtils';
+import {
+  useChartData,
+  ChartStatus,
+  shortDate,
+  chartCardStyle,
+  computeTrend,
+  useDateSelection,
+  useValidSelectedDate,
+  SelectedDateChip,
+} from '../components/charts/chartUtils';
 import { fetchCompareData } from '../services/dataService';
 
 const views = [
@@ -60,9 +69,15 @@ function CompareRechartsView({ activeView }) {
     return (data.solar.totalKwh / data.greenhouse.totalKwh) * 100;
   }, [data]);
 
+  const { selectedDate, toggleDate, clearDate } = useDateSelection();
+  const validSelectedDate = useValidSelectedDate(selectedDate, energyVsSolar);
+
   return (
     <div>
-      <DateRangeFilter range={range} onChange={setRange} />
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: '10px' }}>
+        <DateRangeFilter range={range} onChange={setRange} />
+        <SelectedDateChip date={validSelectedDate} onClear={clearDate} />
+      </div>
       {(loading || error) && (
         <div style={chartCardStyle}>
           <ChartStatus loading={loading} error={error} loadingLabel="Loading comparison data…" />
@@ -81,8 +96,8 @@ function CompareRechartsView({ activeView }) {
       )}
       {!loading && !error && data && activeView === 'energyVsSolar' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <CompareChart data={energyVsSolar} />
-          <CompareNetEnergyChart data={energyVsSolar} />
+          <CompareChart data={energyVsSolar} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
+          <CompareNetEnergyChart data={energyVsSolar} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
             <CumulativeChart
               data={cumulativeNetInput}
@@ -91,18 +106,20 @@ function CompareRechartsView({ activeView }) {
               color="var(--accent-purple)"
               unit="kWh"
               showZeroLine
+              selectedDate={validSelectedDate}
+              onSelectDate={toggleDate}
             />
-            <CompareSelfSufficiencyChart data={energyVsSolar} />
+            <CompareSelfSufficiencyChart data={energyVsSolar} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
           </div>
         </div>
       )}
       {!loading && !error && data && activeView === 'energySolarBreakdown' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <EnergyBreakdownChart dailyRecords={greenhouseRecords} />
-          <SolarChart data={solarRecords} />
+          <EnergyBreakdownChart dailyRecords={greenhouseRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
+          <SolarChart data={solarRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
-            <EnergyBySystemChart dailyRecords={greenhouseRecords} />
-            <SolarCollectorTotalsChart data={solarRecords} />
+            <EnergyBySystemChart dailyRecords={greenhouseRecords} selectedDate={validSelectedDate} />
+            <SolarCollectorTotalsChart data={solarRecords} selectedDate={validSelectedDate} />
           </div>
         </div>
       )}
