@@ -21,6 +21,7 @@ import {
   useDateSelection,
   useValidSelectedDate,
   SelectedDateChip,
+  useCategorySelection,
 } from '../components/charts/chartUtils';
 import { fetchGreenhouseData } from '../services/dataService';
 
@@ -43,6 +44,7 @@ function EnergyRechartsView() {
 
   const { selectedDate, toggleDate, clearDate } = useDateSelection();
   const validSelectedDate = useValidSelectedDate(selectedDate, dailyRecords);
+  const { activeCategory, toggleCategory } = useCategorySelection();
 
   return (
     <div>
@@ -53,11 +55,24 @@ function EnergyRechartsView() {
       {(loading || error) && <div style={chartCardStyle}><ChartStatus loading={loading} error={error} loadingLabel="Loading energy data…" /></div>}
       {!loading && !error && data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <StatTile label="Total Energy Used" value={data.totalKwh} unit="kWh" Icon={Zap} trend={trend} goodDirection="down" />
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+            <StatTile label="Total Energy Used" value={data.totalKwh} unit="kWh" Icon={Zap} trend={trend} goodDirection="down" />
+          </div>
           <EnergyChart data={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
-          <EnergyBreakdownChart dailyRecords={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
+          <EnergyBreakdownChart
+            dailyRecords={dailyRecords}
+            selectedDate={validSelectedDate}
+            onSelectDate={toggleDate}
+            activeCategory={activeCategory}
+            onToggleCategory={toggleCategory}
+          />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
-            <EnergyBySystemChart dailyRecords={dailyRecords} selectedDate={validSelectedDate} />
+            <EnergyBySystemChart
+              dailyRecords={dailyRecords}
+              selectedDate={validSelectedDate}
+              activeCategory={activeCategory}
+              onToggleCategory={toggleCategory}
+            />
             <CumulativeChart
               data={cumulativeInput}
               title="Cumulative Energy Consumption"

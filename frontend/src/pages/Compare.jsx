@@ -25,6 +25,7 @@ import {
   useDateSelection,
   useValidSelectedDate,
   SelectedDateChip,
+  useCategorySelection,
 } from '../components/charts/chartUtils';
 import { fetchCompareData } from '../services/dataService';
 
@@ -71,6 +72,7 @@ function CompareRechartsView({ activeView }) {
 
   const { selectedDate, toggleDate, clearDate } = useDateSelection();
   const validSelectedDate = useValidSelectedDate(selectedDate, energyVsSolar);
+  const { activeCategory, toggleCategory } = useCategorySelection();
 
   return (
     <div>
@@ -115,11 +117,33 @@ function CompareRechartsView({ activeView }) {
       )}
       {!loading && !error && data && activeView === 'energySolarBreakdown' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <EnergyBreakdownChart dailyRecords={greenhouseRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
-          <SolarChart data={solarRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
+          <EnergyBreakdownChart
+            dailyRecords={greenhouseRecords}
+            selectedDate={validSelectedDate}
+            onSelectDate={toggleDate}
+            activeCategory={activeCategory}
+            onToggleCategory={toggleCategory}
+          />
+          <SolarChart
+            data={solarRecords}
+            selectedDate={validSelectedDate}
+            onSelectDate={toggleDate}
+            activeCategory={activeCategory}
+            onToggleCategory={toggleCategory}
+          />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
-            <EnergyBySystemChart dailyRecords={greenhouseRecords} selectedDate={validSelectedDate} />
-            <SolarCollectorTotalsChart data={solarRecords} selectedDate={validSelectedDate} />
+            <EnergyBySystemChart
+              dailyRecords={greenhouseRecords}
+              selectedDate={validSelectedDate}
+              activeCategory={activeCategory}
+              onToggleCategory={toggleCategory}
+            />
+            <SolarCollectorTotalsChart
+              data={solarRecords}
+              selectedDate={validSelectedDate}
+              activeCategory={activeCategory}
+              onToggleCategory={toggleCategory}
+            />
           </div>
         </div>
       )}

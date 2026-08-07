@@ -1,9 +1,11 @@
 import React, { useMemo } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, ResponsiveContainer } from 'recharts';
-import { chartCardStyle, chartTitleStyle, useFillOpacity, makeChartClickHandler } from './chartUtils';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer } from 'recharts';
+import { chartCardStyle, chartTitleStyle, useFillOpacity, makeChartClickHandler, relevantCategory, CategoryLegend } from './chartUtils';
 import { ENERGY_GROUPS, groupBreakdown } from './energyGroups';
 
-export default function EnergyBreakdownChart({ dailyRecords, selectedDate, onSelectDate }) {
+const GROUP_NAMES = ENERGY_GROUPS.map((g) => g.name);
+
+export default function EnergyBreakdownChart({ dailyRecords, selectedDate, onSelectDate, activeCategory, onToggleCategory }) {
   const chartData = useMemo(
     () =>
       dailyRecords.map((r) => ({
@@ -13,6 +15,7 @@ export default function EnergyBreakdownChart({ dailyRecords, selectedDate, onSel
     [dailyRecords]
   );
   const fillOpacity = useFillOpacity(0.7);
+  const activeGroup = relevantCategory(activeCategory, GROUP_NAMES);
 
   return (
     <div style={chartCardStyle}>
@@ -32,23 +35,31 @@ export default function EnergyBreakdownChart({ dailyRecords, selectedDate, onSel
             contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', fontSize: '12px' }}
             formatter={(value, name) => [`${value.toFixed(1)} kWh`, name]}
           />
-          <Legend wrapperStyle={{ fontSize: '11px' }} />
-          {ENERGY_GROUPS.map((group) => (
-            <Area
-              key={group.key}
-              isAnimationActive={false}
-              type="monotone"
-              dataKey={group.key}
-              stackId="1"
-              stroke={group.color}
-              strokeWidth={1.5}
-              fill={group.color}
-              fillOpacity={fillOpacity}
-              name={group.name}
-            />
-          ))}
+          {ENERGY_GROUPS.map((group) => {
+            const isDimmed = activeGroup && activeGroup !== group.name;
+            return (
+              <Area
+                key={group.key}
+                isAnimationActive={false}
+                type="monotone"
+                dataKey={group.key}
+                stackId="1"
+                stroke={group.color}
+                strokeWidth={1.5}
+                strokeOpacity={isDimmed ? 0.3 : 1}
+                fill={group.color}
+                fillOpacity={isDimmed ? fillOpacity * 0.3 : fillOpacity}
+                name={group.name}
+              />
+            );
+          })}
         </AreaChart>
       </ResponsiveContainer>
+      <CategoryLegend
+        items={ENERGY_GROUPS.map((g) => ({ name: g.name, color: g.color }))}
+        activeCategory={activeGroup}
+        onToggle={onToggleCategory}
+      />
     </div>
   );
 }

@@ -3,7 +3,7 @@ import CategoryTotalsChart from './shared/CategoryTotalsChart';
 
 // Same day-split swap as EnergyBySystemChart when a date is cross-filtered
 // in from another chart on the page.
-export default function SolarCollectorTotalsChart({ data, selectedDate }) {
+export default function SolarCollectorTotalsChart({ data, selectedDate, activeCategory, onToggleCategory }) {
   const source = selectedDate ? data.filter((r) => r.date === selectedDate) : data;
   const totals = useMemo(() => {
     const collector1 = source.reduce((sum, r) => sum + (r.collector1Kwh || 0), 0);
@@ -16,5 +16,7 @@ export default function SolarCollectorTotalsChart({ data, selectedDate }) {
 
   const title = selectedDate ? `Generation by Collector — ${selectedDate}` : 'Total Generation by Collector — share of range';
 
-  return <CategoryTotalsChart data={totals} title={title} unit="kWh" />;
+  return (
+    <CategoryTotalsChart data={totals} title={title} unit="kWh" activeCategory={activeCategory} onToggleCategory={onToggleCategory} />
+  );
 }

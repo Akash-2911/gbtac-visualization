@@ -5,7 +5,7 @@ import { ENERGY_GROUPS, groupBreakdown } from './energyGroups';
 // When a date is cross-filtered in from another chart on the page, this
 // swaps from a period total to that single day's system split instead of
 // hiding/dimming — a "share of range" framing doesn't apply to one day.
-export default function EnergyBySystemChart({ dailyRecords, selectedDate }) {
+export default function EnergyBySystemChart({ dailyRecords, selectedDate, activeCategory, onToggleCategory }) {
   const source = selectedDate ? dailyRecords.filter((r) => r.date === selectedDate) : dailyRecords;
   const data = useMemo(() => {
     const totals = { chiller: 0, lighting: 0, heating: 0, waterFiltration: 0, pumpsGrow: 0 };
@@ -18,5 +18,7 @@ export default function EnergyBySystemChart({ dailyRecords, selectedDate }) {
 
   const title = selectedDate ? `Energy by System — ${selectedDate}` : 'Total Energy by System — share of range';
 
-  return <CategoryTotalsChart data={data} title={title} unit="kWh" />;
+  return (
+    <CategoryTotalsChart data={data} title={title} unit="kWh" activeCategory={activeCategory} onToggleCategory={onToggleCategory} />
+  );
 }

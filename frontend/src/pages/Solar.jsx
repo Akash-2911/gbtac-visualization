@@ -20,6 +20,7 @@ import {
   useDateSelection,
   useValidSelectedDate,
   SelectedDateChip,
+  useCategorySelection,
 } from '../components/charts/chartUtils';
 import { fetchSolarData } from '../services/dataService';
 
@@ -40,6 +41,7 @@ function SolarRechartsView() {
 
   const { selectedDate, toggleDate, clearDate } = useDateSelection();
   const validSelectedDate = useValidSelectedDate(selectedDate, dailyRecords);
+  const { activeCategory, toggleCategory } = useCategorySelection();
 
   return (
     <div>
@@ -50,11 +52,24 @@ function SolarRechartsView() {
       {(loading || error) && <div style={chartCardStyle}><ChartStatus loading={loading} error={error} loadingLabel="Loading solar data…" /></div>}
       {!loading && !error && data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <StatTile label="Total Solar Generated" value={data.totalKwh} unit="kWh" Icon={Sun} trend={trend} goodDirection="up" />
-          <SolarChart data={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+            <StatTile label="Total Solar Generated" value={data.totalKwh} unit="kWh" Icon={Sun} trend={trend} goodDirection="up" />
+          </div>
+          <SolarChart
+            data={dailyRecords}
+            selectedDate={validSelectedDate}
+            onSelectDate={toggleDate}
+            activeCategory={activeCategory}
+            onToggleCategory={toggleCategory}
+          />
           <SolarSunlightChart data={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
-            <SolarCollectorTotalsChart data={dailyRecords} selectedDate={validSelectedDate} />
+            <SolarCollectorTotalsChart
+              data={dailyRecords}
+              selectedDate={validSelectedDate}
+              activeCategory={activeCategory}
+              onToggleCategory={toggleCategory}
+            />
             <ScatterCorrelationChart
               data={dailyRecords}
               title="Sunlight vs Generation"

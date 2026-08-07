@@ -84,6 +84,11 @@ export function useFillOpacity(base) {
 // fetched for that page's chart — no extra request. Returns null (no
 // arrow shown) when there isn't a real prior day to compare against,
 // rather than fabricating a comparison.
+//
+// Compares the last two days actually present in whatever records were
+// passed in — which, once a date-range filter is applied, are not
+// necessarily "yesterday" relative to today. Returns both dates so the
+// caller can label the comparison honestly instead of assuming "yesterday".
 export function computeTrend(dailyRecords, valueKey) {
   if (!dailyRecords || dailyRecords.length < 2) return null;
   const sorted = [...dailyRecords].sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -91,11 +96,20 @@ export function computeTrend(dailyRecords, valueKey) {
   const prev = sorted[sorted.length - 2];
   const lastVal = last[valueKey] || 0;
   const prevVal = prev[valueKey] || 0;
-  if (lastVal === prevVal) return { direction: 'flat', deltaPct: 0 };
+  const dates = { lastDate: last.date, prevDate: prev.date };
+  if (lastVal === prevVal) return { ...dates, direction: 'flat', deltaPct: 0 };
   return {
+    ...dates,
     direction: lastVal > prevVal ? 'up' : 'down',
     deltaPct: prevVal !== 0 ? ((lastVal - prevVal) / prevVal) * 100 : null,
   };
+}
+
+// "Aug 5" — used to name the actual date a trend is comparing against, for
+// the (common, once a date-range filter is applied) case where that date
+// isn't really yesterday.
+export function formatShortDate(dateStr) {
+  return new Date(`${dateStr}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 // Cross-filter selection ("Model A" — click a date on any trend chart,
@@ -117,6 +131,67 @@ export function useValidSelectedDate(selectedDate, dailyRecords) {
   return useMemo(
     () => (selectedDate && dailyRecords.some((r) => r.date === selectedDate) ? selectedDate : null),
     [selectedDate, dailyRecords]
+  );
+}
+
+// Cross-filter selection ("Model B" — click a legend entry, that category
+// is emphasized everywhere it appears on the page; every other category
+// dims). One shared name per page, same toggle-to-clear pattern as
+// useDateSelection. A single page can host two unrelated category domains
+// (Compare's breakdown tab has both energy systems and solar collectors) —
+// rather than tracking two states, each chart decides for itself whether
+// the active name belongs to its own category set (see `relevantCategory`
+// below), so selecting one domain's category harmlessly leaves the other
+// domain's chart at full brightness instead of wrongly dimming it.
+export function useCategorySelection() {
+  const [activeCategory, setActiveCategory] = useState(null);
+  const toggleCategory = (name) => setActiveCategory((prev) => (prev === name ? null : name));
+  return { activeCategory, toggleCategory };
+}
+
+// Only treat `activeCategory` as active for a chart if it's actually one of
+// that chart's own category names.
+export function relevantCategory(activeCategory, names) {
+  return activeCategory && names.includes(activeCategory) ? activeCategory : null;
+}
+
+// Clickable legend for stacked-area breakdown charts (EnergyBreakdownChart,
+// SolarChart) — replaces Recharts' own <Legend>, which can't take an
+// onClick per entry. Active entry is bolded; every other entry dims,
+// signaling "click again to clear" the same way CategoryTotalsChart's own
+// legend already does.
+export function CategoryLegend({ items, activeCategory, onToggle }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', marginTop: '10px' }}>
+      {items.map((item) => {
+        const isActive = activeCategory === item.name;
+        const isDimmed = Boolean(activeCategory) && !isActive;
+        return (
+          <button
+            key={item.name}
+            type="button"
+            onClick={() => onToggle(item.name)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '11.5px',
+              fontWeight: isActive ? 700 : 500,
+              color: isDimmed ? 'var(--text-muted)' : 'var(--text-secondary)',
+              opacity: isDimmed ? 0.55 : 1,
+              background: 'none',
+              border: 'none',
+              padding: '2px 4px',
+              cursor: 'pointer',
+              transition: 'opacity 0.15s ease',
+            }}
+          >
+            <span style={{ width: '9px', height: '9px', borderRadius: '2px', backgroundColor: item.color, flexShrink: 0 }} />
+            {item.name}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
