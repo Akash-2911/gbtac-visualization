@@ -6,8 +6,9 @@
  *
  * GET /powerbi/token?reportId=<id>
  * Returns a Power BI embed token for a specific report.
- * All authenticated roles can access dashboards (Admin, SuperAdmin, Staff, Viewer).
- * No anonymous access — every caller must have a valid JWT.
+ * All authenticated roles can access dashboards (Admin, SuperAdmin, Staff,
+ * Viewer), plus Guest (GUEST MODE — anonymous "View as Guest" sessions,
+ * see shared/authMiddleware.js).
  */
 
 const { app } = require("@azure/functions");
