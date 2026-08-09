@@ -23,7 +23,7 @@ app.http("powerbiToken", {
   handler: async (request, context) => {
     try {
       // All authenticated roles can get embed tokens — dashboards are read-only for everyone
-      await checkAuth(request, [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.STAFF, ROLES.VIEWER]);
+      await checkAuth(request, [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.STAFF, ROLES.VIEWER, ROLES.GUEST]); // GUEST MODE: App Owns Data model, token isn't tied to caller identity
 
       const reportId   = request.query.get("reportId");
       const workspaceId = process.env.PBI_WORKSPACE_ID;

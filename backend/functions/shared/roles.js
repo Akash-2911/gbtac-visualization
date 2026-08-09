@@ -5,6 +5,10 @@ const ROLES = {
   ADMIN: "Admin",
   STAFF: "Staff",
   VIEWER: "Viewer",
+  // GUEST MODE: anonymous "View as Guest" session (no Entra sign-in, no DB
+  // row). Grep "GUEST MODE" across both frontend and backend to find every
+  // file touched by this feature if it ever needs to be removed.
+  GUEST: "Guest",
 };
 
 // users.status — the approval workflow state, distinct from the separate

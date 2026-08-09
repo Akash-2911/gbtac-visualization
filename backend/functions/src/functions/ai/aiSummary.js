@@ -31,8 +31,12 @@ app.http("aiSummary", {
   route: "ai/summary",
   handler: async (request, context) => {
     try {
-      const user = await checkAuth(request, [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
-      checkRateLimit(user.oid, 10, 60000);
+      const user = await checkAuth(request, [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST]); // GUEST MODE
+      // GUEST MODE: user.oid is null for guests — without this, every guest
+      // session would collapse into one shared rate-limit bucket keyed on
+      // `null`. Stricter cap for guests too (5/min vs 10/min).
+      const rateLimitKey = user.isGuest ? `guest:${user.guestId}` : user.oid;
+      checkRateLimit(rateLimitKey, user.isGuest ? 5 : 10, 60000);
 
       const siteId = resolveSiteId(request);
       const pool = await getPool();

@@ -39,7 +39,7 @@ app.http("getUploadHistory", {
   handler: async (request, context) => {
     try {
       // Step 1: verify caller is Admin or SuperAdmin
-      await checkAuth(request, [ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+      await checkAuth(request, [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST]); // GUEST MODE
 
       // Step 2: parse query params
       const page   = Math.max(1, parseInt(request.query.get("page")  || "1"));

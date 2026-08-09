@@ -32,8 +32,12 @@ app.http("aiChat", {
   route: "ai/chat",
   handler: async (request, context) => {
     try {
-      const user = await checkAuth(request, [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
-      checkRateLimit(user.oid, 10, 60000);
+      const user = await checkAuth(request, [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST]); // GUEST MODE
+      // GUEST MODE: user.oid is null for guests — key on the guest session
+      // id instead (see authMiddleware.js getGuestUser), with a stricter cap
+      // than the real 10/min, since chat is the most spend-sensitive endpoint.
+      const rateLimitKey = user.isGuest ? `guest:${user.guestId}` : user.oid;
+      checkRateLimit(rateLimitKey, user.isGuest ? 5 : 10, 60000);
 
       const body = await request.json();
       const question = (body?.question || "").trim();

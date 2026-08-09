@@ -36,7 +36,7 @@ app.http("getUsers", {
   handler: async (request, context) => {
     try {
       // Only Admin and SuperAdmin can view user list
-      await checkAuth(request, [ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+      await checkAuth(request, [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST]); // GUEST MODE: real user list shown to guests too, accepted risk (dev-only accounts today)
 
       // Parse optional filters
       const roleFilter   = request.query.get("role")   || null;

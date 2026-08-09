@@ -41,7 +41,8 @@ function App() {
               <Route
                 path="ai-assistant"
                 element={
-                  <ProtectedRoute allowedRoles={[ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN]}>
+                  // GUEST MODE
+                  <ProtectedRoute allowedRoles={[ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST]}>
                     <AIAssistant />
                   </ProtectedRoute>
                 }
@@ -50,7 +51,8 @@ function App() {
               <Route
                 path="admin/upload"
                 element={
-                  <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}>
+                  // GUEST MODE: page renders read-only for Guest — see Upload.jsx/Admin.jsx
+                  <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST]}>
                     <Upload />
                   </ProtectedRoute>
                 }
@@ -58,7 +60,8 @@ function App() {
               <Route
                 path="admin"
                 element={
-                  <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}>
+                  // GUEST MODE: page renders read-only for Guest — see Admin.jsx
+                  <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST]}>
                     <Admin />
                   </ProtectedRoute>
                 }

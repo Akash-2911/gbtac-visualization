@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../components/ThemeContext';
 import { ROLES } from '../constants/roles';
+import { isGuestMode, endGuestSession } from '../auth/guestSession';
 
 // Each item can declare allowedRoles; omitted means visible to everyone
 // signed in. Filtered per-render based on the real database role.
@@ -45,15 +46,15 @@ function getNavGroups(role) {
           label: 'AI Assistant',
           icon: Sparkles,
           beta: true,
-          allowedRoles: [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+          allowedRoles: [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST], // GUEST MODE
         },
       ],
     },
     {
       label: 'MANAGEMENT',
       items: [
-        { path: '/admin', label: 'Admin', icon: ShieldCheck, end: true, allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN] },
-        { path: '/admin/upload', label: 'Data Upload', icon: UploadCloud, allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN] },
+        { path: '/admin', label: 'Admin', icon: ShieldCheck, end: true, allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST] }, // GUEST MODE
+        { path: '/admin/upload', label: 'Data Upload', icon: UploadCloud, allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST] }, // GUEST MODE
         { path: '/settings', label: 'Settings', icon: SettingsIcon },
       ],
     },
@@ -75,7 +76,9 @@ export default function Layout() {
   const { theme, setTheme } = useTheme();
 
   const account = instance.getActiveAccount();
-  const displayName = account?.name || account?.username || 'User';
+  // GUEST MODE: no MSAL account exists for a guest, so name it explicitly
+  // instead of falling through to the generic 'User' default.
+  const displayName = isGuestMode() ? 'Guest' : account?.name || account?.username || 'User';
   const initials = displayName
     .split(' ')
     .map((part) => part[0])
@@ -97,6 +100,13 @@ export default function Layout() {
   };
 
   const handleLogout = () => {
+    // GUEST MODE: no MSAL session exists to log out of — just clear the
+    // guest flag and leave.
+    if (isGuestMode()) {
+      endGuestSession();
+      navigate('/login');
+      return;
+    }
     instance.logoutRedirect({
       postLogoutRedirectUri: window.location.origin + '/login',
     });
