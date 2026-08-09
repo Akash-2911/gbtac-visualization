@@ -112,6 +112,30 @@ export function formatShortDate(dateStr) {
   return new Date(`${dateStr}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+// Range-wide sum of a numeric field across dailyRecords — used where the API
+// doesn't already return a period total (unlike totalKwh/totalCo2Kg, which
+// the backend computes server-side for other pages).
+export function computeSum(dailyRecords, valueKey) {
+  if (!dailyRecords || dailyRecords.length === 0) return null;
+  return dailyRecords.reduce((acc, r) => acc + (r[valueKey] || 0), 0);
+}
+
+// Range-wide mean of a numeric field. Deliberately has no trend companion —
+// a range average has no single prior value to compare against without
+// fetching a second date range, so callers pass trend={null}/note instead of
+// fabricating one (same honesty rule as computeTrend's null case).
+export function computeAverage(dailyRecords, valueKey) {
+  const sum = computeSum(dailyRecords, valueKey);
+  return sum === null ? null : sum / dailyRecords.length;
+}
+
+// The single highest day for valueKey, keeping its date — powers "Peak Day"
+// KPI tiles. Same no-trend reasoning as computeAverage.
+export function computePeakDay(dailyRecords, valueKey) {
+  if (!dailyRecords || dailyRecords.length === 0) return null;
+  return dailyRecords.reduce((peak, r) => ((r[valueKey] ?? -Infinity) > (peak[valueKey] ?? -Infinity) ? r : peak));
+}
+
 // Cross-filter selection ("Model A" — click a date on any trend chart,
 // every other trend chart on the page marks it, category-total charts
 // swap to that single day). One selection per page, toggled by clicking

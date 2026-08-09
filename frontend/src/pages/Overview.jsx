@@ -46,12 +46,17 @@ function OverviewRechartsView() {
     return data.emissions.dailyRecords.map((r) => ({ ...r, date: shortDate(r.date) }));
   }, [data]);
 
+  const solarRecords = useMemo(() => {
+    if (!data) return [];
+    return data.solar.dailyRecords.map((r) => ({ ...r, date: shortDate(r.date) }));
+  }, [data]);
+
   const trends = useMemo(() => {
     if (!data) return {};
     return {
-      totalEnergyUsedKwh: computeTrend(data.greenhouse.dailyRecords, 'totalKwh'),
-      totalSolarGeneratedKwh: computeTrend(data.solar.dailyRecords, 'totalKwh'),
-      totalCo2EmissionsKg: computeTrend(data.emissions.dailyRecords, 'kgCo2e'),
+      totalEnergyUsedKwh: computeTrend(greenhouseRecords, 'totalKwh'),
+      totalSolarGeneratedKwh: computeTrend(solarRecords, 'totalKwh'),
+      totalCo2EmissionsKg: computeTrend(emissionsRecords, 'kgCo2e'),
       // No daily breakdown of peak demand is fetched on this page, so no
       // entry here — OverviewChart shows no trend arrow for that tile
       // rather than fabricating one.
