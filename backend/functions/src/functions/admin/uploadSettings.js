@@ -38,7 +38,7 @@ app.http("uploadSettings", {
       const pool = await sql.connect(sqlConfig);
 
       if (request.method === "GET") {
-        await checkAuth(request, [ROLES.VIEWER, ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+        await checkAuth(request, [ROLES.VIEWER, ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST]); // GUEST MODE
 
         const result = await pool.request().query(
           "SELECT max_upload_mb, updated_at FROM upload_settings WHERE id = 1"

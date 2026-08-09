@@ -7,7 +7,7 @@ import { ROLES } from '../constants/roles';
 
 // Matches /ai/summary's own checkAuth gate exactly — Viewers never see the
 // button at all rather than clicking it and getting a 403.
-const AI_INSIGHT_ROLES = [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN];
+const AI_INSIGHT_ROLES = [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST]; // GUEST MODE
 
 // Click-to-reveal AI Insight — used on all 6 dashboard pages. Doesn't fetch
 // on mount (that was Compare.jsx's original behavior, always burning an AI

@@ -51,8 +51,11 @@ app.http("aiPredict", {
   handler: async (request, context) => {
     try {
       // Auth: Staff and above — Viewer role blocked (same as other AI endpoints)
-      const user = await checkAuth(request, [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
-      checkRateLimit(user.oid, 10, 60000);
+      const user = await checkAuth(request, [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST]); // GUEST MODE
+      // GUEST MODE: see aiSummary.js — user.oid is null for guests, so key
+      // on the guest session id instead, with a stricter cap.
+      const rateLimitKey = user.isGuest ? `guest:${user.guestId}` : user.oid;
+      checkRateLimit(rateLimitKey, user.isGuest ? 5 : 10, 60000);
 
       const siteId = resolveSiteId(request);
 

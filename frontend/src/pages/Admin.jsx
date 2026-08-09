@@ -464,7 +464,12 @@ const handleDeny = async (userId) => {
                           checked={u.active}
                           onChange={() => handleToggleActive(u.id, u.active)}
                           label=""
-                          disabled={isSelf}
+                          // GUEST MODE: this wasn't gated by canEditRoles before,
+                          // only isSelf — even a non-SuperAdmin Admin could see
+                          // it enabled even though the backend's updateUser PATCH
+                          // is SuperAdmin-only, so it would 403 on click anyway.
+                          // Fixing that here also correctly locks it for Guest.
+                          disabled={isSelf || !canEditRoles}
                         />
                         <span
                           style={{

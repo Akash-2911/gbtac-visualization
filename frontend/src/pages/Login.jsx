@@ -1,14 +1,16 @@
 import React from 'react';
 import { useMsal } from '@azure/msal-react';
-import { Navigate } from 'react-router-dom';
-import { Moon, SunMedium } from 'lucide-react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { Moon, SunMedium, Eye } from 'lucide-react';
 import { loginRequest } from '../auth/authConfig';
 import { msalInstance } from '../auth/msalInstance';
 import { useTheme } from '../components/ThemeContext';
+import { startGuestSession } from '../auth/guestSession';
 import GreenhouseScene from '../components/GreenhouseScene';
 
 export default function Login() {
   const { instance } = useMsal();
+  const navigate = useNavigate();
   const isAuthenticated = msalInstance.getAllAccounts().length > 0;
   const { theme, setTheme } = useTheme();
 
@@ -19,6 +21,15 @@ export default function Login() {
   const handleMicrosoftLogin = () => {
     sessionStorage.clear();
     instance.loginRedirect(loginRequest);
+  };
+
+  // GUEST MODE: no MSAL round-trip — just mark the session and go straight
+  // in. To remove guest mode entirely, delete this handler, its button
+  // below, and every other "GUEST MODE" comment across the codebase (grep
+  // for it).
+  const handleGuestLogin = () => {
+    startGuestSession();
+    navigate('/');
   };
 
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
@@ -113,6 +124,31 @@ export default function Login() {
           >
             <MicrosoftLogo />
             Sign in with Microsoft
+          </button>
+
+          {/* GUEST MODE */}
+          <button
+            onClick={handleGuestLogin}
+            className="gbtac-btn-fx"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              width: '100%',
+              padding: '12px',
+              marginBottom: '20px',
+              border: '1px solid var(--border)',
+              borderRadius: '8px',
+              backgroundColor: 'var(--surface)',
+              color: 'var(--text-secondary)',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            <Eye size={16} />
+            View as Guest
           </button>
 
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontStyle: 'italic', marginBottom: '20px' }}>

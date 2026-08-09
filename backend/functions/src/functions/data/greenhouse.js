@@ -18,7 +18,7 @@ app.http("greenhouse", {
   route: "greenhouse",
   handler: async (request, context) => {
     try {
-      const user = await checkAuth(request, [ROLES.VIEWER, ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+      const user = await checkAuth(request, [ROLES.VIEWER, ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST]); // GUEST MODE
 
       const siteId = resolveSiteId(request);
       const from = request.query.get("from") || "2000-01-01";
