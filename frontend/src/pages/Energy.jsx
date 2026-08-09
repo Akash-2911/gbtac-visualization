@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { TrendingUp, BarChart3, LayoutDashboard, Zap } from 'lucide-react';
+import { TrendingUp, BarChart3, LayoutDashboard, Zap, PieChart } from 'lucide-react';
 import PowerBIReport from '../components/PowerBIReport';
 import PageContainer from '../components/PageContainer';
 import ReportCard from '../components/ReportCard';
@@ -12,12 +12,15 @@ import EnergyBreakdownChart from '../components/charts/EnergyBreakdownChart';
 import EnergyBySystemChart from '../components/charts/EnergyBySystemChart';
 import CumulativeChart from '../components/charts/shared/CumulativeChart';
 import StatTile from '../components/charts/shared/StatTile';
+import { ENERGY_GROUPS, groupBreakdown } from '../components/charts/energyGroups';
 import {
   useChartData,
   ChartStatus,
   shortDate,
   chartCardStyle,
   computeTrend,
+  computeAverage,
+  computePeakDay,
   useDateSelection,
   useValidSelectedDate,
   SelectedDateChip,
@@ -40,7 +43,21 @@ function EnergyRechartsView() {
   }, [data]);
 
   const cumulativeInput = useMemo(() => dailyRecords.map((r) => ({ date: r.date, value: r.totalKwh })), [dailyRecords]);
-  const trend = useMemo(() => (data ? computeTrend(data.dailyRecords, 'totalKwh') : null), [data]);
+  const trend = useMemo(() => (data ? computeTrend(dailyRecords, 'totalKwh') : null), [data, dailyRecords]);
+  const avgDaily = useMemo(() => computeAverage(dailyRecords, 'totalKwh'), [dailyRecords]);
+  const peakDay = useMemo(() => computePeakDay(dailyRecords, 'totalKwh'), [dailyRecords]);
+  const topSystem = useMemo(() => {
+    if (dailyRecords.length === 0) return null;
+    const totals = {};
+    for (const group of ENERGY_GROUPS) totals[group.name] = 0;
+    for (const r of dailyRecords) {
+      const grouped = groupBreakdown(r.breakdown);
+      for (const group of ENERGY_GROUPS) totals[group.name] += grouped[group.key] || 0;
+    }
+    const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
+    const [name, value] = Object.entries(totals).sort((a, b) => b[1] - a[1])[0];
+    return { name, pct: grandTotal ? (value / grandTotal) * 100 : 0 };
+  }, [dailyRecords]);
 
   const { selectedDate, toggleDate, clearDate } = useDateSelection();
   const validSelectedDate = useValidSelectedDate(selectedDate, dailyRecords);
@@ -57,6 +74,27 @@ function EnergyRechartsView() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
             <StatTile label="Total Energy Used" value={data.totalKwh} unit="kWh" Icon={Zap} trend={trend} goodDirection="down" />
+            <StatTile
+              label="Average Daily Usage"
+              value={avgDaily ?? 0}
+              unit="kWh/day"
+              Icon={BarChart3}
+              note="mean over selected range"
+            />
+            <StatTile
+              label="Peak Day"
+              value={peakDay ? peakDay.totalKwh : 0}
+              unit="kWh"
+              Icon={TrendingUp}
+              note={peakDay ? peakDay.date : '—'}
+            />
+            <StatTile
+              label="Top System"
+              value={topSystem ? topSystem.name : '—'}
+              unit={topSystem ? `${topSystem.pct.toFixed(0)}%` : ''}
+              Icon={PieChart}
+              note="share of total usage"
+            />
           </div>
           <EnergyChart data={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
           <EnergyBreakdownChart

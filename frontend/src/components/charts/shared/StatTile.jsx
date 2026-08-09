@@ -52,7 +52,13 @@ function TrendBadge({ trend, goodDirection }) {
   );
 }
 
-export default function StatTile({ label, value, unit, Icon, trend, goodDirection }) {
+// `note` renders a plain muted line in place of the trend arrow — for
+// tiles with no day-over-day comparison to show (range averages, peak-day
+// dates, categorical values like "Top System") — so every KPI tile keeps
+// the same 3-row shape instead of some being visibly shorter than others.
+// `decimals` (default 0) only matters for numeric `value`; string values
+// (e.g. a system name) render as-is.
+export default function StatTile({ label, value, unit, Icon, trend, goodDirection, note, decimals = 0 }) {
   return (
     <div
       style={{
@@ -68,12 +74,18 @@ export default function StatTile({ label, value, unit, Icon, trend, goodDirectio
         <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{label}</span>
       </div>
       <span style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-        {value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+        {typeof value === 'number' ? value.toLocaleString(undefined, { maximumFractionDigits: decimals }) : value}
         <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)', marginLeft: '4px' }}>
           {unit}
         </span>
       </span>
-      <TrendBadge trend={trend} goodDirection={goodDirection} />
+      {trend ? (
+        <TrendBadge trend={trend} goodDirection={goodDirection} />
+      ) : note ? (
+        <span style={{ fontSize: '0.75rem', fontWeight: 500, fontStyle: 'italic', color: 'var(--text-muted)' }}>
+          {note}
+        </span>
+      ) : null}
     </div>
   );
 }

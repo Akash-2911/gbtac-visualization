@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart3, LayoutDashboard, Zap, Sun } from 'lucide-react';
+import { BarChart3, LayoutDashboard, Zap, Sun, Battery } from 'lucide-react';
 import PowerBIReport from '../components/PowerBIReport';
 import PageContainer from '../components/PageContainer';
 import ReportCard from '../components/ReportCard';
@@ -63,12 +63,17 @@ function CompareRechartsView({ activeView }) {
     [energyVsSolar]
   );
 
-  const energyTrend = useMemo(() => (data ? computeTrend(data.greenhouse.dailyRecords, 'totalKwh') : null), [data]);
-  const solarTrend = useMemo(() => (data ? computeTrend(data.solar.dailyRecords, 'totalKwh') : null), [data]);
+  const energyTrend = useMemo(() => (data ? computeTrend(greenhouseRecords, 'totalKwh') : null), [data, greenhouseRecords]);
+  const solarTrend = useMemo(() => (data ? computeTrend(solarRecords, 'totalKwh') : null), [data, solarRecords]);
   const selfSufficiencyPct = useMemo(() => {
     if (!data || !data.greenhouse.totalKwh) return null;
     return (data.solar.totalKwh / data.greenhouse.totalKwh) * 100;
   }, [data]);
+  const netEnergy = useMemo(
+    () => (data ? data.solar.totalKwh - data.greenhouse.totalKwh : null),
+    [data]
+  );
+  const netTrend = useMemo(() => computeTrend(cumulativeNetInput, 'value'), [cumulativeNetInput]);
 
   const { selectedDate, toggleDate, clearDate } = useDateSelection();
   const validSelectedDate = useValidSelectedDate(selectedDate, energyVsSolar);
@@ -89,6 +94,7 @@ function CompareRechartsView({ activeView }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
           <StatTile label="Total Energy Consumed" value={data.greenhouse.totalKwh} unit="kWh" Icon={Zap} trend={energyTrend} goodDirection="down" />
           <StatTile label="Total Solar Generated" value={data.solar.totalKwh} unit="kWh" Icon={Sun} trend={solarTrend} goodDirection="up" />
+          <StatTile label="Net Energy" value={netEnergy ?? 0} unit="kWh" Icon={Battery} trend={netTrend} goodDirection="up" />
         </div>
       )}
       {!loading && !error && data && selfSufficiencyPct !== null && (

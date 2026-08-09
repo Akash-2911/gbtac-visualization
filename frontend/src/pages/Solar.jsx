@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart3, LayoutDashboard, Sun } from 'lucide-react';
+import { BarChart3, LayoutDashboard, Sun, TrendingUp, Sunrise } from 'lucide-react';
 import PowerBIReport from '../components/PowerBIReport';
 import PageContainer from '../components/PageContainer';
 import ReportCard from '../components/ReportCard';
@@ -17,6 +17,8 @@ import {
   shortDate,
   chartCardStyle,
   computeTrend,
+  computeAverage,
+  computePeakDay,
   useDateSelection,
   useValidSelectedDate,
   SelectedDateChip,
@@ -37,7 +39,13 @@ function SolarRechartsView() {
     if (!data) return [];
     return data.dailyRecords.map((r) => ({ ...r, date: shortDate(r.date) }));
   }, [data]);
-  const trend = useMemo(() => (data ? computeTrend(data.dailyRecords, 'totalKwh') : null), [data]);
+  const trend = useMemo(() => (data ? computeTrend(dailyRecords, 'totalKwh') : null), [data, dailyRecords]);
+  const avgDaily = useMemo(() => computeAverage(dailyRecords, 'totalKwh'), [dailyRecords]);
+  const peakDay = useMemo(() => computePeakDay(dailyRecords, 'totalKwh'), [dailyRecords]);
+  const peakSunlight = useMemo(() => {
+    if (dailyRecords.length === 0) return null;
+    return Math.max(...dailyRecords.map((r) => r.peakSunlightWm2 || 0));
+  }, [dailyRecords]);
 
   const { selectedDate, toggleDate, clearDate } = useDateSelection();
   const validSelectedDate = useValidSelectedDate(selectedDate, dailyRecords);
@@ -54,6 +62,27 @@ function SolarRechartsView() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
             <StatTile label="Total Solar Generated" value={data.totalKwh} unit="kWh" Icon={Sun} trend={trend} goodDirection="up" />
+            <StatTile
+              label="Average Daily Generation"
+              value={avgDaily ?? 0}
+              unit="kWh/day"
+              Icon={BarChart3}
+              note="mean over selected range"
+            />
+            <StatTile
+              label="Peak Day"
+              value={peakDay ? peakDay.totalKwh : 0}
+              unit="kWh"
+              Icon={TrendingUp}
+              note={peakDay ? peakDay.date : '—'}
+            />
+            <StatTile
+              label="Peak Sunlight"
+              value={peakSunlight ?? 0}
+              unit="W/m²"
+              Icon={Sunrise}
+              note="max over selected range"
+            />
           </div>
           <SolarChart
             data={dailyRecords}

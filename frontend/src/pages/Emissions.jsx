@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart3, LayoutDashboard, Cloud } from 'lucide-react';
+import { BarChart3, LayoutDashboard, Cloud, TrendingUp, Target } from 'lucide-react';
 import PowerBIReport from '../components/PowerBIReport';
 import PageContainer from '../components/PageContainer';
 import ReportCard from '../components/ReportCard';
@@ -18,6 +18,8 @@ import {
   shortDate,
   chartCardStyle,
   computeTrend,
+  computeAverage,
+  computePeakDay,
   useDateSelection,
   useValidSelectedDate,
   SelectedDateChip,
@@ -39,7 +41,13 @@ function EmissionsRechartsView() {
   }, [data]);
 
   const cumulativeInput = useMemo(() => dailyRecords.map((r) => ({ date: r.date, value: r.kgCo2e })), [dailyRecords]);
-  const trend = useMemo(() => (data ? computeTrend(data.dailyRecords, 'kgCo2e') : null), [data]);
+  const trend = useMemo(() => (data ? computeTrend(dailyRecords, 'kgCo2e') : null), [data, dailyRecords]);
+  const avgDaily = useMemo(() => computeAverage(dailyRecords, 'kgCo2e'), [dailyRecords]);
+  const peakDay = useMemo(() => computePeakDay(dailyRecords, 'kgCo2e'), [dailyRecords]);
+  const intensity = useMemo(
+    () => (data && data.totalEnergyKwh ? data.totalCo2Kg / data.totalEnergyKwh : null),
+    [data]
+  );
 
   const { selectedDate, toggleDate, clearDate } = useDateSelection();
   const validSelectedDate = useValidSelectedDate(selectedDate, dailyRecords);
@@ -55,6 +63,28 @@ function EmissionsRechartsView() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
             <StatTile label="Total CO2 Emissions" value={data.totalCo2Kg} unit="kg" Icon={Cloud} trend={trend} goodDirection="down" />
+            <StatTile
+              label="Average Daily Emissions"
+              value={avgDaily ?? 0}
+              unit="kg/day"
+              Icon={BarChart3}
+              note="mean over selected range"
+            />
+            <StatTile
+              label="Peak Day"
+              value={peakDay ? peakDay.kgCo2e : 0}
+              unit="kg"
+              Icon={TrendingUp}
+              note={peakDay ? peakDay.date : '—'}
+            />
+            <StatTile
+              label="Emission Intensity"
+              value={intensity ?? 0}
+              unit="kg CO2/kWh"
+              Icon={Target}
+              note="range-wide ratio"
+              decimals={2}
+            />
           </div>
           <EmissionsChart data={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>

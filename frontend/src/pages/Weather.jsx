@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart3, LayoutDashboard } from 'lucide-react';
+import { BarChart3, LayoutDashboard, CloudRain, Thermometer, Droplets, TrendingUp } from 'lucide-react';
 import PowerBIReport from '../components/PowerBIReport';
 import PageContainer from '../components/PageContainer';
 import ReportCard from '../components/ReportCard';
@@ -10,11 +10,16 @@ import WeatherChart from '../components/charts/WeatherChart';
 import WeatherPrecipChart from '../components/charts/WeatherPrecipChart';
 import WeatherHumidityChart from '../components/charts/WeatherHumidityChart';
 import CumulativeChart from '../components/charts/shared/CumulativeChart';
+import StatTile from '../components/charts/shared/StatTile';
 import {
   useChartData,
   ChartStatus,
   shortDate,
   chartCardStyle,
+  computeTrend,
+  computeSum,
+  computeAverage,
+  computePeakDay,
   useDateSelection,
   useValidSelectedDate,
   SelectedDateChip,
@@ -40,6 +45,20 @@ function WeatherRechartsView() {
     [dailyRecords]
   );
 
+  // No goodDirection is passed to these three trend badges — unlike
+  // consumption/generation, neither direction is objectively "good" for a
+  // weather reading, so the arrow stays neutral gray instead of red/green.
+  const totalPrecip = useMemo(() => computeSum(dailyRecords, 'totalPrecipMm'), [dailyRecords]);
+  const precipTrend = useMemo(() => (data ? computeTrend(dailyRecords, 'totalPrecipMm') : null), [data, dailyRecords]);
+  const avgTemp = useMemo(() => computeAverage(dailyRecords, 'avgTempC'), [dailyRecords]);
+  const tempTrend = useMemo(() => (data ? computeTrend(dailyRecords, 'avgTempC') : null), [data, dailyRecords]);
+  const avgHumidity = useMemo(() => computeAverage(dailyRecords, 'avgHumidityPct'), [dailyRecords]);
+  const humidityTrend = useMemo(
+    () => (data ? computeTrend(dailyRecords, 'avgHumidityPct') : null),
+    [data, dailyRecords]
+  );
+  const peakRainDay = useMemo(() => computePeakDay(dailyRecords, 'totalPrecipMm'), [dailyRecords]);
+
   const { selectedDate, toggleDate, clearDate } = useDateSelection();
   const validSelectedDate = useValidSelectedDate(selectedDate, dailyRecords);
 
@@ -52,6 +71,25 @@ function WeatherRechartsView() {
       {(loading || error) && <div style={chartCardStyle}><ChartStatus loading={loading} error={error} loadingLabel="Loading weather data…" /></div>}
       {!loading && !error && data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+            <StatTile label="Total Precipitation" value={totalPrecip ?? 0} unit="mm" Icon={CloudRain} trend={precipTrend} />
+            <StatTile
+              label="Average Temperature"
+              value={avgTemp ?? 0}
+              unit="°C"
+              Icon={Thermometer}
+              trend={tempTrend}
+              decimals={1}
+            />
+            <StatTile label="Average Humidity" value={avgHumidity ?? 0} unit="%" Icon={Droplets} trend={humidityTrend} />
+            <StatTile
+              label="Peak Rain Day"
+              value={peakRainDay ? peakRainDay.totalPrecipMm : 0}
+              unit="mm"
+              Icon={TrendingUp}
+              note={peakRainDay ? peakRainDay.date : '—'}
+            />
+          </div>
           <WeatherChart data={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
             <WeatherPrecipChart data={dailyRecords} selectedDate={validSelectedDate} onSelectDate={toggleDate} />
