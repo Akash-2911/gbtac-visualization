@@ -2,21 +2,25 @@ const USE_MOCK = process.env.REACT_APP_USE_MOCK_EMBED_TOKEN === 'true';
 
 import { getAccessToken } from '../auth/getAccessToken';
 import { API_BASE_URL } from './apiClient';
+import { isGuestMode, getGuestSessionId } from '../auth/guestSession';
 
 export async function fetchEmbedToken(reportId) {
   if (USE_MOCK) {
     return mockFetchEmbedToken(reportId);
   }
 
-  const accessToken = await getAccessToken();
+  // GUEST MODE: this file fetches its own token instead of going through
+  // apiClient.js's authFetch, so it needs the same guest branch repeated
+  // here — a guest has no MSAL account, so getAccessToken() would throw.
+  const headers = isGuestMode()
+    ? { 'X-Guest-Session': getGuestSessionId() }
+    : { Authorization: `Bearer ${await getAccessToken()}` };
 
   const response = await fetch(
     `${API_BASE_URL}/powerbi/token?reportId=${encodeURIComponent(reportId)}`,
     {
       method: 'GET',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      headers,
     }
   );
 
