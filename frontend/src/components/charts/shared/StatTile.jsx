@@ -26,6 +26,31 @@ function comparisonLabel(prevDate) {
   return prev.toDateString() === yesterday.toDateString() ? 'yesterday' : formatShortDate(prevDate);
 }
 
+// A colored arrow alone assumes the viewer already knows whether up or down
+// is good for this particular metric (backwards for consumption/emissions
+// vs. generation) — this pill states the verdict in words too, so the color
+// is reinforcement rather than the only signal. Also makes the judgment
+// legible to colorblind viewers, which color-only never was.
+function VerdictPill({ isGood }) {
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        fontSize: '0.625rem',
+        fontWeight: 700,
+        padding: '1px 7px',
+        borderRadius: '20px',
+        marginLeft: '2px',
+        backgroundColor: isGood ? 'var(--status-green-bg)' : 'var(--status-red-bg)',
+        color: isGood ? 'var(--status-green-text)' : 'var(--status-red-text)',
+      }}
+    >
+      {isGood ? 'Good' : 'Needs attention'}
+    </span>
+  );
+}
+
 function TrendBadge({ trend, goodDirection }) {
   if (!trend) return null;
   const { direction, deltaPct, prevDate } = trend;
@@ -35,8 +60,10 @@ function TrendBadge({ trend, goodDirection }) {
   let ArrowIcon = Minus;
   if (direction === 'up') ArrowIcon = ArrowUp;
   if (direction === 'down') ArrowIcon = ArrowDown;
-  if (direction !== 'flat' && goodDirection) {
-    color = direction === goodDirection ? 'var(--status-green-text)' : 'var(--status-red-text)';
+  const hasVerdict = direction !== 'flat' && Boolean(goodDirection);
+  const isGood = hasVerdict && direction === goodDirection;
+  if (hasVerdict) {
+    color = isGood ? 'var(--status-green-text)' : 'var(--status-red-text)';
   }
 
   const label =
@@ -48,6 +75,7 @@ function TrendBadge({ trend, goodDirection }) {
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.75rem', fontWeight: 600, color }}>
       <ArrowIcon size={13} />
       {label}
+      {hasVerdict && <VerdictPill isGood={isGood} />}
     </span>
   );
 }

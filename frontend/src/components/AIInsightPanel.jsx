@@ -49,18 +49,34 @@ export default function AIInsightPanel() {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '6px',
-          padding: '8px 16px',
+          gap: '7px',
+          padding: '8px 16px 8px 12px',
           fontSize: '13px',
           fontWeight: 600,
-          borderRadius: '8px',
-          border: '1px solid var(--border)',
+          borderRadius: '20px',
+          border: open ? '1px solid transparent' : '1px solid var(--border)',
           cursor: 'pointer',
-          backgroundColor: open ? 'var(--ai-accent)' : 'var(--surface)',
+          backgroundColor: open ? undefined : 'var(--surface)',
+          backgroundImage: open ? 'linear-gradient(135deg, #9333EA, #C026D3)' : 'none',
           color: open ? '#fff' : 'var(--text-secondary)',
+          boxShadow: open ? '0 2px 10px rgba(147,51,234,0.35)' : 'none',
         }}
       >
-        <Sparkles size={15} />
+        <span
+          style={{
+            width: '20px',
+            height: '20px',
+            borderRadius: '50%',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            backgroundColor: open ? 'rgba(255,255,255,0.2)' : 'rgba(147,51,234,0.14)',
+            color: open ? '#fff' : 'var(--ai-accent)',
+          }}
+        >
+          <Sparkles size={12} />
+        </span>
         {open ? 'Hide AI Insight' : 'Show AI Insight'}
       </button>
 

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { TrendingUp, BarChart3, LayoutDashboard, Zap, PieChart } from 'lucide-react';
+import { TrendingUp, BarChart3, LayoutDashboard, Zap, PieChart, ChevronDown } from 'lucide-react';
 import PowerBIReport from '../components/PowerBIReport';
 import PageContainer from '../components/PageContainer';
 import ReportCard from '../components/ReportCard';
@@ -145,19 +145,23 @@ export default function Energy() {
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            padding: '8px 16px',
+            padding: '7px 14px',
             fontSize: '13px',
             fontWeight: 600,
             borderRadius: '8px',
-            border: '1px solid var(--border)',
+            border: showForecast ? '1.5px solid var(--accent-blue)' : '1.5px dashed var(--accent-blue)',
             cursor: 'pointer',
-            backgroundColor: showForecast ? 'var(--accent-blue)' : 'var(--surface)',
-            color: showForecast ? '#fff' : 'var(--text-secondary)',
+            backgroundColor: showForecast ? 'var(--accent-blue)' : 'transparent',
+            color: showForecast ? '#fff' : 'var(--accent-blue)',
             marginBottom: '16px',
           }}
         >
           <TrendingUp size={15} />
           {showForecast ? 'Hide energy forecast' : 'Show energy forecast'}
+          <ChevronDown
+            size={13}
+            style={{ transition: 'transform 0.15s', transform: showForecast ? 'rotate(180deg)' : 'rotate(0deg)' }}
+          />
         </button>
       </div>
 
