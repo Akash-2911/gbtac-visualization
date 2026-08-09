@@ -100,11 +100,13 @@ export default function Layout() {
   };
 
   const handleLogout = () => {
-    // GUEST MODE: no MSAL session exists to log out of — just clear the
-    // guest flag and leave.
+    // GUEST MODE: no MSAL session to log out of — clear the guest flag and
+    // leave via a full page load, not navigate(), for the same reason
+    // startGuestSession's caller does (see Login.jsx) — UserProvider sits
+    // above the router and won't re-render on client-side navigation alone.
     if (isGuestMode()) {
       endGuestSession();
-      navigate('/login');
+      window.location.href = '/login';
       return;
     }
     instance.logoutRedirect({

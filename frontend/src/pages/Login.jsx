@@ -1,6 +1,6 @@
 import React from 'react';
 import { useMsal } from '@azure/msal-react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { Moon, SunMedium, Eye } from 'lucide-react';
 import { loginRequest } from '../auth/authConfig';
 import { msalInstance } from '../auth/msalInstance';
@@ -10,7 +10,6 @@ import GreenhouseScene from '../components/GreenhouseScene';
 
 export default function Login() {
   const { instance } = useMsal();
-  const navigate = useNavigate();
   const isAuthenticated = msalInstance.getAllAccounts().length > 0;
   const { theme, setTheme } = useTheme();
 
@@ -23,13 +22,19 @@ export default function Login() {
     instance.loginRedirect(loginRequest);
   };
 
-  // GUEST MODE: no MSAL round-trip — just mark the session and go straight
-  // in. To remove guest mode entirely, delete this handler, its button
-  // below, and every other "GUEST MODE" comment across the codebase (grep
-  // for it).
+  // GUEST MODE: no MSAL round-trip, but still a full page load (not
+  // useNavigate) rather than client-side routing — UserContext.jsx's
+  // UserProvider sits above <BrowserRouter> in App.js, so a client-side
+  // route change never re-renders it and its /me-fetching effect would
+  // never re-fire, leaving the app stuck on a blank "checking" screen
+  // until a manual refresh. A full navigation remounts everything fresh,
+  // which is also exactly what instance.loginRedirect() above does for a
+  // real sign-in — this keeps both paths consistent. To remove guest mode
+  // entirely, delete this handler, its button below, and every other
+  // "GUEST MODE" comment across the codebase (grep for it).
   const handleGuestLogin = () => {
     startGuestSession();
-    navigate('/');
+    window.location.href = '/';
   };
 
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
