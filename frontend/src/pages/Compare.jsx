@@ -163,7 +163,7 @@ export default function Compare() {
 
   return (
     <PageContainer title="Compare" subtitle="Energy consumed vs energy generated">
-      <AIInsightPanel />
+      <AIInsightPanel domain="overview" />
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
         <ViewToggle value={chartView} onChange={setChartView} options={CHART_VIEW_OPTIONS} />

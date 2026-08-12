@@ -121,7 +121,7 @@ export default function Solar() {
 
   return (
     <PageContainer title="Solar" subtitle="Real-time solar collection and power output data">
-      <AIInsightPanel />
+      <AIInsightPanel domain="solar" />
       <ViewToggle value={view} onChange={setView} options={VIEW_OPTIONS} />
       {view === 'powerbi' ? (
         <ReportCard>

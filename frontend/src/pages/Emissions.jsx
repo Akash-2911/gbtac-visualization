@@ -124,7 +124,7 @@ export default function Emissions() {
       title="Emissions"
       subtitle="CO2 emissions from greenhouse energy consumption"
     >
-      <AIInsightPanel />
+      <AIInsightPanel domain="emissions" />
       <ViewToggle value={view} onChange={setView} options={VIEW_OPTIONS} />
       {view === 'powerbi' ? (
         <ReportCard>

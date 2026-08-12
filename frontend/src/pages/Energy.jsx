@@ -133,7 +133,7 @@ export default function Energy() {
 
   return (
     <PageContainer title="Energy" subtitle="Energy consumption across all greenhouse systems">
-      <AIInsightPanel />
+      <AIInsightPanel domain="energy" />
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', marginBottom: '4px' }}>
         <ViewToggle value={view} onChange={setView} options={VIEW_OPTIONS} />
 

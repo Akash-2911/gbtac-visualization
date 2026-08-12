@@ -97,7 +97,7 @@ export default function Overview() {
 
   return (
     <PageContainer title="Overview" subtitle="Sprung Greenhouse — Black Diamond, Alberta">
-      <AIInsightPanel />
+      <AIInsightPanel domain="overview" />
       <ViewToggle value={view} onChange={setView} options={VIEW_OPTIONS} />
       {view === 'powerbi' ? <PowerBIReport reportKey="overview" /> : <OverviewRechartsView />}
     </PageContainer>
