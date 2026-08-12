@@ -34,7 +34,7 @@ app.http("getAdminSummary", {
   handler: async (request, context) => {
     try {
       // Only Admin and SuperAdmin can view admin summary
-      await checkAuth(request, [ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+      await checkAuth(request, [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST]); // GUEST MODE
 
       const pool = await sql.connect(sqlConfig);
 

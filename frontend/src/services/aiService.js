@@ -1,7 +1,7 @@
 import { authFetch } from './apiClient';
 
-export function fetchAiSummary() {
-  return authFetch('/ai/summary');
+export function fetchAiSummary(domain) {
+  return authFetch(`/ai/summary?domain=${encodeURIComponent(domain)}`);
 }
 
 export function postAiChat(question) {

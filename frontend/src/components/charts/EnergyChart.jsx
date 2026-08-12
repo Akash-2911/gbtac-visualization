@@ -1,0 +1,42 @@
+import React from 'react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer } from 'recharts';
+import { chartCardStyle, chartTitleStyle, useFillOpacity, makeChartClickHandler } from './chartUtils';
+
+// Presentational — receives already-fetched daily records (page-level
+// fetch is shared across this page's other charts) rather than fetching
+// its own copy of the same endpoint.
+export default function EnergyChart({ data, selectedDate, onSelectDate }) {
+  const fillOpacity = useFillOpacity(0.15);
+  return (
+    <div style={chartCardStyle}>
+      <h3 style={chartTitleStyle}>Daily Energy Consumption</h3>
+      <ResponsiveContainer width="100%" height={340}>
+        <AreaChart
+          data={data}
+          margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+          onClick={makeChartClickHandler(onSelectDate)}
+          style={{ cursor: onSelectDate ? 'pointer' : 'default' }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+          <YAxis tick={{ fontSize: 11 }} width={50} />
+          {selectedDate && <ReferenceLine x={selectedDate} stroke="var(--text-muted)" strokeDasharray="4 4" />}
+          <Tooltip
+            contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', fontSize: '12px' }}
+            formatter={(value) => [`${value.toFixed(1)} kWh`, 'Total Energy']}
+          />
+          <Area
+            isAnimationActive={false}
+            type="monotone"
+            dataKey="totalKwh"
+            stroke="var(--accent-purple)"
+            strokeWidth={2}
+            fill="var(--accent-purple)"
+            fillOpacity={fillOpacity}
+            name="Total kWh"
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}

@@ -1,10 +1,19 @@
 const { app } = require("@azure/functions");
+const sql = require("mssql");
 const { checkAuth } = require("../../../shared/authMiddleware");
 const { uploadFileToBlob } = require("../../../shared/blobStorage");
 const { queueUploadMessage } = require("../../../shared/serviceBusQueue");
 const { ROLES } = require("../../../shared/roles");
+const { getMaxUploadMb } = require("../../../shared/uploadSettings");
 
 const VALID_DATASET_TYPES = ["greenhouse", "solar", "weather"];
+
+const sqlConfig = {
+  server: process.env.SQL_SERVER,
+  database: process.env.SQL_DATABASE,
+  authentication: { type: "azure-active-directory-default" },
+  options: { encrypt: true, trustServerCertificate: false },
+};
 
 app.http("uploadFile", {
   methods: ["POST"],
@@ -39,6 +48,19 @@ app.http("uploadFile", {
       const fileName = file.name;
       const arrayBuffer = await file.arrayBuffer();
       const fileBuffer = Buffer.from(arrayBuffer);
+
+      // Reject oversized files here rather than only in processUpload.js —
+      // otherwise the caller gets a false "uploaded, processing queued"
+      // response and only finds out it failed after the async queue runs.
+      const pool = await sql.connect(sqlConfig);
+      const maxUploadMb = await getMaxUploadMb(pool);
+      const sizeMb = fileBuffer.length / (1024 * 1024);
+      if (sizeMb > maxUploadMb) {
+        return {
+          status: 400,
+          jsonBody: { error: `File size ${sizeMb.toFixed(1)} MB exceeds the ${maxUploadMb} MB limit.` },
+        };
+      }
 
       // Step 2b: read the dataset type the user picked in the UI dropdown.
       // Normalized to lowercase to match DATASET_CONFIGS keys in

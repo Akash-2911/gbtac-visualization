@@ -14,6 +14,24 @@
 
   --accent-blue: #3B82F6;
   --accent-purple: #7C3AED;
+  --accent-teal: #0891B2;
+
+  /* AI-branded UI (Show AI Insight, the AI Assistant nav badge) used to
+     reuse --accent-purple directly, which now also means "Energy" in the
+     Recharts views — decoupled so picking a new AI color can't repaint
+     Energy charts, and vice versa. Punchier violet than accent-purple so
+     the two stay visually distinguishable when they appear near each other. */
+  --ai-accent: #9333EA;
+
+  /* Sub-category shades of a parent domain color — used when several series
+     within one category (energy sub-systems, solar collectors) need to read
+     as "part of the same thing" rather than as unrelated categories. */
+  --energy-tint-1: #DDD6FE;
+  --energy-tint-2: #A78BFA;
+  --energy-tint-3: #7C3AED;
+  --energy-tint-4: #6D28D9;
+  --energy-tint-5: #4C1D95;
+  --solar-tint-1: #93C5FD;
 
   --status-green-bg: #DCFCE7;
   --status-green-text: #16A34A;
@@ -21,6 +39,11 @@
   --status-orange-text: #EA580C;
   --status-red-bg: #FEE2E2;
   --status-red-text: #DC2626;
+
+  /* Faint seed-tray dot grid behind the AI Chat thread — warmed to a soil
+     tone rather than reused --ai-accent violet, so it reads as its own
+     greenhouse-adjacent texture instead of a tint of the AI brand color. */
+  --chat-dot-line: rgba(180,83,9,0.10);
 
   --font-body: 'Inter', -apple-system, sans-serif;
 
@@ -32,9 +55,28 @@
   --bg: #12161C;
   --surface: #1B222B;
   --border: #2A333D;
+
+  /* The light-mode energy-tint ramp fails on a dark surface: the two
+     lightest steps wash out below the colorblind-safe chroma floor, and
+     the two darkest sit under 2.3:1 contrast against #1B222B (nearly
+     invisible). This is a dedicated dark-mode ramp — same hue, steps
+     chosen so every one of the 5 stays visible — not an automatic flip of
+     the light-mode values, per the dataviz skill's guidance. Validated
+     with validate_palette.js --mode dark --ordinal (monotonic, >=0.06
+     lightness gap between steps, darkest step >=2:1 vs surface). */
+  --energy-tint-1: #C4B5FD;
+  --energy-tint-2: #A78BFA;
+  --energy-tint-3: #8B5CF6;
+  --energy-tint-4: #7C3AED;
+  --energy-tint-5: #6A26CE;
   --text-primary: #E8E9EA;
   --text-secondary: #A8B0BA;
   --text-muted: #6E7681;
+
+  /* A translucent color reads noticeably fainter on a near-black surface —
+     lighter amber at higher alpha than the light-mode value, same asymmetry
+     the chart tint ramps already account for. */
+  --chat-dot-line: rgba(251,191,36,0.16);
 }
 
 /* High contrast mode (item #10) — pushes text/border colors to their
@@ -108,4 +150,61 @@ h1, h2, h3 {
   height: 100%;
   width: 100%;
   border: none;
+}
+
+/* ============================================================
+   Shared motion utilities (animation pass — item #7)
+   Reused across pages instead of each defining its own hover/
+   fade rules, so timing stays consistent app-wide.
+   ============================================================ */
+
+/* Generic press/hover feedback for actionable buttons that had
+   none before (flat color, no anticipatory feedback pre-click). */
+.gbtac-btn-fx {
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+.gbtac-btn-fx:hover:not(:disabled) {
+  filter: brightness(0.93);
+}
+.gbtac-btn-fx:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Generic fade-in for content that used to pop in instantly
+   (route pages, revealed panels, chat messages, modals). */
+@keyframes gbtac-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.gbtac-fade-in {
+  animation: gbtac-fade-in 0.18s ease-out;
+}
+
+/* Confirmation-modal entrance (delete-upload, delete-user) — backdrop
+   fades in, dialog scales up from 92% instead of both popping in at
+   full opacity/size instantly. */
+@keyframes gbtac-modal-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes gbtac-modal-box-in {
+  from { opacity: 0; transform: scale(0.94) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.gbtac-modal-backdrop {
+  animation: gbtac-modal-backdrop-in 0.15s ease-out;
+}
+.gbtac-modal-box {
+  animation: gbtac-modal-box-in 0.18s cubic-bezier(0.2, 0.8, 0.3, 1.1);
+}
+
+/* Respect the OS-level reduce-motion preference across every
+   animation/transition in the app, not just the ones added here. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

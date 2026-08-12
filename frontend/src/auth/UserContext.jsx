@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { fetchMe } from '../services/adminService';
+import { isGuestMode } from './guestSession';
 
 const UserContext = createContext(null);
 
@@ -11,7 +12,10 @@ const UserContext = createContext(null);
 // old "sidebar shows Admin but you're really Viewer" bug happened.
 export function UserProvider({ children }) {
   const { accounts } = useMsal();
-  const isAuthenticated = accounts.length > 0;
+  // GUEST MODE: a guest session has no MSAL account — isGuestMode() lets it
+  // through here too, and fetchMe() below still does the real work, now
+  // succeeding for guests via authFetch's guest branch (apiClient.js).
+  const isAuthenticated = accounts.length > 0 || isGuestMode();
 
   const [user, setUser] = useState(null);
   const [status, setStatus] = useState('checking'); // checking | ready | pending | error

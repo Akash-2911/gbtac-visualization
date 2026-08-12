@@ -2,12 +2,14 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { msalInstance } from './msalInstance';
 import { useUser } from './UserContext';
+import { isGuestMode } from './guestSession';
 import PendingApproval from '../pages/PendingApproval';
 import AccessDenied from '../pages/AccessDenied';
 
 export default function ProtectedRoute({ children, allowedRoles }) {
   const accounts = msalInstance.getAllAccounts();
-  const isAuthenticated = accounts.length > 0;
+  // GUEST MODE: see UserContext.jsx — same bypass, same reasoning.
+  const isAuthenticated = accounts.length > 0 || isGuestMode();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;

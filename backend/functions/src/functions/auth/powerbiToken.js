@@ -6,8 +6,9 @@
  *
  * GET /powerbi/token?reportId=<id>
  * Returns a Power BI embed token for a specific report.
- * All authenticated roles can access dashboards (Admin, SuperAdmin, Staff, Viewer).
- * No anonymous access — every caller must have a valid JWT.
+ * All authenticated roles can access dashboards (Admin, SuperAdmin, Staff,
+ * Viewer), plus Guest (GUEST MODE — anonymous "View as Guest" sessions,
+ * see shared/authMiddleware.js).
  */
 
 const { app } = require("@azure/functions");
@@ -23,7 +24,7 @@ app.http("powerbiToken", {
   handler: async (request, context) => {
     try {
       // All authenticated roles can get embed tokens — dashboards are read-only for everyone
-      await checkAuth(request, [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.STAFF, ROLES.VIEWER]);
+      await checkAuth(request, [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.STAFF, ROLES.VIEWER, ROLES.GUEST]); // GUEST MODE: App Owns Data model, token isn't tied to caller identity
 
       const reportId   = request.query.get("reportId");
       const workspaceId = process.env.PBI_WORKSPACE_ID;

@@ -16,9 +16,12 @@ import {
   SunMedium,
   LogOut,
   UploadCloud,
+  Menu,
+  X,
 } from 'lucide-react';
 import { useTheme } from '../components/ThemeContext';
 import { ROLES } from '../constants/roles';
+import { isGuestMode, endGuestSession } from '../auth/guestSession';
 
 // Each item can declare allowedRoles; omitted means visible to everyone
 // signed in. Filtered per-render based on the real database role.
@@ -43,15 +46,15 @@ function getNavGroups(role) {
           label: 'AI Assistant',
           icon: Sparkles,
           beta: true,
-          allowedRoles: [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+          allowedRoles: [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST], // GUEST MODE
         },
       ],
     },
     {
       label: 'MANAGEMENT',
       items: [
-        { path: '/admin', label: 'Admin', icon: ShieldCheck, end: true, allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN] },
-        { path: '/admin/upload', label: 'Data Upload', icon: UploadCloud, allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN] },
+        { path: '/admin', label: 'Admin', icon: ShieldCheck, end: true, allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST] }, // GUEST MODE
+        { path: '/admin/upload', label: 'Data Upload', icon: UploadCloud, allowedRoles: [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST] }, // GUEST MODE
         { path: '/settings', label: 'Settings', icon: SettingsIcon },
       ],
     },
@@ -73,7 +76,9 @@ export default function Layout() {
   const { theme, setTheme } = useTheme();
 
   const account = instance.getActiveAccount();
-  const displayName = account?.name || account?.username || 'User';
+  // GUEST MODE: no MSAL account exists for a guest, so name it explicitly
+  // instead of falling through to the generic 'User' default.
+  const displayName = isGuestMode() ? 'Guest' : account?.name || account?.username || 'User';
   const initials = displayName
     .split(' ')
     .map((part) => part[0])
@@ -95,6 +100,15 @@ export default function Layout() {
   };
 
   const handleLogout = () => {
+    // GUEST MODE: no MSAL session to log out of — clear the guest flag and
+    // leave via a full page load, not navigate(), for the same reason
+    // startGuestSession's caller does (see Login.jsx) — UserProvider sits
+    // above the router and won't re-render on client-side navigation alone.
+    if (isGuestMode()) {
+      endGuestSession();
+      window.location.href = '/login';
+      return;
+    }
     instance.logoutRedirect({
       postLogoutRedirectUri: window.location.origin + '/login',
     });
@@ -109,12 +123,12 @@ export default function Layout() {
       {!menuOpen && (
         <button
           type="button"
-          className="gbtac-hamburger"
+          className="gbtac-hamburger gbtac-btn-fx"
           aria-label="Open navigation menu"
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen(true)}
         >
-          ☰
+          <Menu size={18} />
         </button>
       )}
 
@@ -153,21 +167,20 @@ export default function Layout() {
           </div>
           <button
             type="button"
-            className="gbtac-inpanel-close"
+            className="gbtac-inpanel-close gbtac-btn-fx"
             aria-label="Close navigation menu"
             onClick={closeMenu}
             style={{
               display: 'none',
+              alignItems: 'center',
               background: 'none',
               border: 'none',
               color: '#fff',
-              fontSize: '1.125rem',
-              lineHeight: 1,
               cursor: 'pointer',
               padding: '2px 4px',
             }}
           >
-            ✕
+            <X size={18} />
           </button>
         </div>
 
@@ -196,6 +209,7 @@ export default function Layout() {
                         to={item.path}
                         end={item.end}
                         onClick={closeMenu}
+                        className="gbtac-nav-link"
                         style={({ isActive }) => ({
                           display: 'flex',
                           alignItems: 'center',
@@ -207,6 +221,7 @@ export default function Layout() {
                           textDecoration: 'none',
                           fontSize: '0.875rem',
                           fontWeight: isActive ? 600 : 400,
+                          transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease',
                         })}
                       >
                         <Icon size={17} strokeWidth={2} style={{ flexShrink: 0 }} />
@@ -217,7 +232,7 @@ export default function Layout() {
                               marginLeft: 'auto',
                               fontSize: '0.5625rem',
                               fontWeight: 700,
-                              background: 'var(--accent-purple)',
+                              background: 'var(--ai-accent)',
                               color: '#fff',
                               padding: '1px 6px',
                               borderRadius: '10px',
@@ -242,6 +257,7 @@ export default function Layout() {
           <button
             type="button"
             onClick={toggleTheme}
+            className="gbtac-sidebar-item-fx"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -274,6 +290,7 @@ export default function Layout() {
               }
             }}
             aria-label="Go to your account settings"
+            className="gbtac-sidebar-item-fx"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -322,6 +339,7 @@ export default function Layout() {
             type="button"
             onClick={handleLogout}
             aria-label="Sign out"
+            className="gbtac-sidebar-item-fx"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -361,7 +379,9 @@ export default function Layout() {
           flexDirection: 'column',
         }}
       >
-        <Outlet />
+        <div key={location.pathname} className="gbtac-fade-in" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <Outlet />
+        </div>
       </main>
 
       <style>{`
@@ -378,6 +398,19 @@ export default function Layout() {
           transition: top 0.15s;
         }
         .skip-link:focus { top: 8px; }
+
+        /* Sidebar hover feedback — --sidebar-hover was defined in theme.css
+           but never actually applied anywhere until now. */
+        .gbtac-sidebar-item-fx {
+          border-radius: 6px;
+          transition: background-color 0.15s ease;
+        }
+        .gbtac-sidebar-item-fx:hover {
+          background-color: var(--sidebar-hover);
+        }
+        .gbtac-nav-link:hover {
+          background-color: var(--sidebar-hover) !important;
+        }
 
         .gbtac-hamburger { display: none; }
         .gbtac-backdrop { display: none; }

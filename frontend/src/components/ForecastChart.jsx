@@ -82,6 +82,7 @@ export default function ForecastChart({ title = 'Energy Consumption Forecast' })
 
           {/* Confidence band — shaded area between lower_bound and upper_bound */}
           <Area
+            isAnimationActive={false}
             type="monotone"
             dataKey="range"
             stroke="none"
@@ -93,6 +94,7 @@ export default function ForecastChart({ title = 'Energy Consumption Forecast' })
 
           {/* Historical — solid line */}
           <Line
+            isAnimationActive={false}
             type="monotone"
             dataKey="actual_kwh"
             stroke="var(--text-primary)"
@@ -104,6 +106,7 @@ export default function ForecastChart({ title = 'Energy Consumption Forecast' })
 
           {/* Forecast — dashed line */}
           <Line
+            isAnimationActive={false}
             type="monotone"
             dataKey="predicted_kwh"
             stroke="var(--accent-blue)"

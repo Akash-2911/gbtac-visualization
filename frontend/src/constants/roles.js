@@ -6,6 +6,9 @@ export const ROLES = {
   ADMIN: 'Admin',
   STAFF: 'Staff',
   VIEWER: 'Viewer',
+  // GUEST MODE: anonymous "View as Guest" session, no sign-in. Grep "GUEST
+  // MODE" across the codebase to find every file this feature touches.
+  GUEST: 'Guest',
 };
 
 // user.status — the approval workflow state, distinct from the separate

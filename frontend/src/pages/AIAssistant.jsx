@@ -1,13 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles } from 'lucide-react';
+import { Send, Sparkles, BarChart3 } from 'lucide-react';
 import PageContainer from '../components/PageContainer';
 import { postAiChat } from '../services/aiService';
+import { highlightMetrics } from '../components/highlightMetrics';
+import AIChatChart from '../components/charts/AIChatChart';
 
 export default function AIAssistant() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [openCharts, setOpenCharts] = useState(new Set());
   const bottomRef = useRef(null);
+
+  const toggleChart = (i) => {
+    setOpenCharts((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -23,7 +35,7 @@ export default function AIAssistant() {
 
     try {
       const data = await postAiChat(question);
-      setMessages((prev) => [...prev, { role: 'assistant', content: data.answer }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: data.answer, chart: data.chart }]);
     } catch (e) {
       let content;
       if (e.status === 403) {
@@ -57,6 +69,8 @@ export default function AIAssistant() {
           display: 'flex',
           flexDirection: 'column',
           backgroundColor: 'var(--surface)',
+          backgroundImage: 'radial-gradient(var(--chat-dot-line) 1.6px, transparent 1.6px)',
+          backgroundSize: '24px 24px',
           border: '1px solid var(--border)',
           borderRadius: '10px',
           minHeight: 0,
@@ -77,7 +91,7 @@ export default function AIAssistant() {
           {messages.map((msg, i) => {
             if (msg.role === 'user') {
               return (
-                <div key={i} style={{ alignSelf: 'flex-end', maxWidth: '75%' }}>
+                <div key={i} className="gbtac-fade-in" style={{ alignSelf: 'flex-end', maxWidth: '75%' }}>
                   <div
                     style={{
                       background: 'var(--accent-blue)',
@@ -94,7 +108,7 @@ export default function AIAssistant() {
             }
             if (msg.role === 'error') {
               return (
-                <div key={i} style={{ alignSelf: 'flex-start', maxWidth: '75%' }}>
+                <div key={i} className="gbtac-fade-in" style={{ alignSelf: 'flex-start', maxWidth: '75%' }}>
                   <div
                     style={{
                       background: 'var(--status-red-bg)',
@@ -109,8 +123,13 @@ export default function AIAssistant() {
                 </div>
               );
             }
+            const isChartOpen = openCharts.has(i);
             return (
-              <div key={i} style={{ alignSelf: 'flex-start', maxWidth: '75%' }}>
+              <div
+                key={i}
+                className="gbtac-fade-in"
+                style={{ alignSelf: 'flex-start', maxWidth: '75%', display: 'flex', flexDirection: 'column', gap: '8px' }}
+              >
                 <div
                   style={{
                     background: 'var(--bg)',
@@ -119,14 +138,54 @@ export default function AIAssistant() {
                     fontSize: '14px',
                   }}
                 >
-                  {msg.content}
+                  {highlightMetrics(msg.content)}
                 </div>
+
+                {msg.chart && (
+                  <>
+                    <button
+                      type="button"
+                      className="gbtac-btn-fx"
+                      onClick={() => toggleChart(i)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        alignSelf: 'flex-start',
+                        border: '1px solid var(--border)',
+                        background: 'var(--surface)',
+                        color: 'var(--ai-accent)',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        padding: '6px 12px 6px 10px',
+                        borderRadius: '20px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '50%',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'rgba(147,51,234,0.12)',
+                        }}
+                      >
+                        <BarChart3 size={10} />
+                      </span>
+                      {isChartOpen ? 'Hide graph' : 'See AI-generated graph'}
+                    </button>
+                    {isChartOpen && <AIChatChart chart={msg.chart} />}
+                  </>
+                )}
               </div>
             );
           })}
 
           {isSending && (
-            <div style={{ alignSelf: 'flex-start', maxWidth: '75%' }}>
+            <div className="gbtac-fade-in" style={{ alignSelf: 'flex-start', maxWidth: '75%' }}>
               <div
                 style={{
                   background: 'var(--bg)',
@@ -166,6 +225,7 @@ export default function AIAssistant() {
           <button
             onClick={handleSend}
             disabled={isSending || !input.trim()}
+            className="gbtac-btn-fx"
             style={{
               display: 'flex',
               alignItems: 'center',

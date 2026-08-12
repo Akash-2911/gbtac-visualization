@@ -5,6 +5,7 @@ import PageContainer from '../components/PageContainer';
 import Toggle from '../components/Toggle';
 import Toast from '../components/Toast';
 import { ROLES } from '../constants/roles';
+import { isGuestMode } from '../auth/guestSession';
 
 const FONT_SCALES = [
   { value: 'small', label: 'Small' },
@@ -16,8 +17,9 @@ export default function Settings() {
   const { instance } = useMsal();
   const account = instance.getActiveAccount();
 
-  const displayName = account?.name || account?.username || 'User';
-  const email = account?.username || '—';
+  // GUEST MODE: no MSAL account exists for a guest.
+  const displayName = isGuestMode() ? 'Guest' : account?.name || account?.username || 'User';
+  const email = isGuestMode() ? '—' : account?.username || '—';
 
 // Real role read from the database via /me (shared UserContext), not
   // the JWT token, since SuperAdmin approval only updates the database.
@@ -81,7 +83,8 @@ export default function Settings() {
         </div>
         <div style={{ ...rowStyle, borderBottom: 'none' }}>
           <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Sign-in method</span>
-          <span style={{ fontSize: '0.875rem' }}>Microsoft (Entra ID)</span>
+          {/* GUEST MODE */}
+          <span style={{ fontSize: '0.875rem' }}>{isGuestMode() ? 'None (guest session)' : 'Microsoft (Entra ID)'}</span>
         </div>
       </div>
 
@@ -118,6 +121,7 @@ export default function Settings() {
                   role="radio"
                   aria-checked={active}
                   onClick={() => changeFontScale(value)}
+                  className="gbtac-btn-fx"
                   style={{
                     padding: '6px 14px',
                     fontSize: '0.8125rem',
@@ -127,6 +131,7 @@ export default function Settings() {
                     border: 'none',
                     borderRight: value !== 'large' ? '1px solid var(--border)' : 'none',
                     cursor: 'pointer',
+                    transition: 'background-color 0.15s ease',
                   }}
                 >
                   {label}

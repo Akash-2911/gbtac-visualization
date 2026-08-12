@@ -16,7 +16,14 @@ Rules:
 - Do not mention that you are an AI or explain your reasoning.
 - Only discuss GBTAC energy, solar, emissions, greenhouse, or weather data.
 - If asked anything unrelated (code, general knowledge, other topics), reply exactly: "I can only help with questions about your GBTAC dashboard data."
-- Never write, explain, or execute code of any kind, even if asked directly.`;
+- Never write, explain, or execute code of any kind, even if asked directly.
+- After your answer, on its own new line, output exactly one tag choosing the single dataset your answer is most about: [[CHART:energy]], [[CHART:solar]], [[CHART:emissions]], or [[CHART:none]] if no single trend applies. Output nothing else on that line.`;
+
+// The tag only ever selects WHICH already-fetched series to plot — the chart's
+// actual values always come from these real recordsets below, never from the
+// model, so the "only real data, no fabrication" rule above still holds even
+// though the model is choosing what to show.
+const CHART_TAG_PATTERN = /\[\[CHART:(energy|solar|emissions|none)\]\]\s*$/i;
 
 const ENERGY_COLUMNS = [
   "chiller_pa_kwh", "chiller_pb_kwh",
@@ -32,8 +39,12 @@ app.http("aiChat", {
   route: "ai/chat",
   handler: async (request, context) => {
     try {
-      const user = await checkAuth(request, [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
-      checkRateLimit(user.oid, 10, 60000);
+      const user = await checkAuth(request, [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST]); // GUEST MODE
+      // GUEST MODE: user.oid is null for guests — key on the guest session
+      // id instead (see authMiddleware.js getGuestUser), with a stricter cap
+      // than the real 10/min, since chat is the most spend-sensitive endpoint.
+      const rateLimitKey = user.isGuest ? `guest:${user.guestId}` : user.oid;
+      checkRateLimit(rateLimitKey, user.isGuest ? 5 : 10, 60000);
 
       const body = await request.json();
       const question = (body?.question || "").trim();
@@ -118,11 +129,33 @@ User question: ${question}
       }
 
       const messageOutput = aiData.output?.find((o) => o.type === "message");
-      const answerText = messageOutput?.content?.[0]?.text || "I don't have that data available right now.";
+      const rawAnswer = messageOutput?.content?.[0]?.text || "I don't have that data available right now.";
+
+      const tagMatch = rawAnswer.match(CHART_TAG_PATTERN);
+      const chartSeries = tagMatch ? tagMatch[1].toLowerCase() : null;
+      const answerText = tagMatch ? rawAnswer.slice(0, tagMatch.index).trim() : rawAnswer;
+
+      const CHART_SOURCES = {
+        energy: { records: energyResult.recordset, dateKey: "reading_date", valueKey: "daily_total", label: "Energy Consumption", unit: "kWh" },
+        solar: { records: solarResult.recordset, dateKey: "reading_date", valueKey: "daily_solar", label: "Solar Generation", unit: "kWh" },
+        emissions: { records: emissionsResult.recordset, dateKey: "reading_date", valueKey: "kg_co2e", label: "Emissions", unit: "kg CO2e" },
+      };
+
+      let chart = null;
+      if (chartSeries && chartSeries !== "none" && CHART_SOURCES[chartSeries]) {
+        const src = CHART_SOURCES[chartSeries];
+        const points = [...src.records]
+          .sort((a, b) => new Date(a[src.dateKey]) - new Date(b[src.dateKey]))
+          .slice(-14)
+          .map((r) => ({ date: String(r[src.dateKey]).slice(0, 10), value: r[src.valueKey] || 0 }));
+        if (points.length > 1) {
+          chart = { series: chartSeries, label: src.label, unit: src.unit, data: points };
+        }
+      }
 
       return {
         status: 200,
-        jsonBody: { answer: answerText },
+        jsonBody: { answer: answerText, chart },
       };
     } catch (err) {
       context.error("AI Chat endpoint failed:", err.message);

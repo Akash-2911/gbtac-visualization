@@ -76,6 +76,10 @@ export function denyUser(id) {
   return updateUser(id, { status: USER_STATUS.DENIED });
 }
 
+export function deleteUser(id) {
+  return authFetch(`/dashboard/users/${id}`, { method: 'DELETE' });
+}
+
 export function reapplyAccess() {
   return authFetch('/reapply', { method: 'POST' });
 }
@@ -101,4 +105,20 @@ export function uploadFile(file, dataType) {
 // not just role (e.g. Upload.jsx).
 export function fetchMe() {
   return authFetch('/me');
+}
+
+// Upload size limit — SuperAdmin-configurable (backed by the
+// upload_settings table), not a hardcoded constant anymore.
+export function fetchUploadSettings() {
+  return authFetch('/dashboard/upload-settings').then((data) => ({
+    maxUploadMb: data.maxUploadMb,
+  }));
+}
+
+export function updateUploadSettings(maxUploadMb) {
+  return authFetch('/dashboard/upload-settings', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ maxUploadMb }),
+  });
 }

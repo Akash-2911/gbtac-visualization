@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, SunMedium } from 'lucide-react';
+import { Moon, SunMedium, Clock } from 'lucide-react';
 import { useTheme } from '../components/ThemeContext';
 import GreenhouseScene from '../components/GreenhouseScene';
 
@@ -29,6 +29,7 @@ export default function PendingApproval() {
           type="button"
           onClick={toggleTheme}
           aria-label="Toggle dark mode"
+          className="gbtac-btn-fx"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -67,11 +68,10 @@ export default function PendingApproval() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '24px',
               margin: '0 auto 20px',
             }}
           >
-            ⏳
+            <Clock size={24} />
           </div>
 
           <h1 style={{ fontSize: '22px', marginBottom: '12px', color: 'var(--text-primary)' }}>

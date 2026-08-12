@@ -137,6 +137,30 @@ async function getAuthenticatedUser(request) {
   return { ...decoded, ...dbUser };
 }
 
+// GUEST MODE: an anonymous "View as Guest" session has no Entra JWT to send,
+// so it identifies itself with this header instead — a self-issued,
+// unverified id, not a credential. It grants nothing beyond whatever an
+// endpoint's `allowedRoles` already allows for ROLES.GUEST, so it's safe for
+// it to be unverifiable: mutating endpoints simply never list ROLES.GUEST.
+// To remove guest mode entirely, delete this function plus every other
+// "GUEST MODE" comment across the codebase (grep for it).
+function getGuestUser(request) {
+  const guestId = request.headers.get("x-guest-session");
+  if (!guestId) return null;
+  return {
+    display_name: "Guest",
+    email: null,
+    role: ROLES.GUEST,
+    can_upload: false,
+    active: true,
+    status: USER_STATUS.ACTIVE,
+    isGuest: true,
+    oid: null,
+    user_id: null,
+    guestId,
+  };
+}
+
 /**
  * Checks that a request has a valid JWT AND that the person has an
  * approved, active row in our database.
@@ -150,7 +174,10 @@ async function getAuthenticatedUser(request) {
  * Returns the merged user object if everything passes.
  */
 async function checkAuth(request, allowedRoles = null) {
-  const user = await getAuthenticatedUser(request);
+  // GUEST MODE: bypasses real JWT verification and the DB lookup entirely —
+  // see getGuestUser above.
+  const guestUser = getGuestUser(request);
+  const user = guestUser || (await getAuthenticatedUser(request));
 
   if (user.status === USER_STATUS.PENDING) {
     const err = new Error("Your account is pending SuperAdmin approval.");

@@ -41,6 +41,7 @@ export default function AccessDenied() {
           type="button"
           onClick={toggleTheme}
           aria-label="Toggle dark mode"
+          className="gbtac-btn-fx"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -90,7 +91,7 @@ export default function AccessDenied() {
           </h1>
 
           {submitted ? (
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+            <p className="gbtac-fade-in" style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
               Your request has been resubmitted. A SuperAdmin will review it again shortly.
             </p>
           ) : (
@@ -106,6 +107,7 @@ export default function AccessDenied() {
               )}
               <button
                 onClick={handleRetry}
+                className="gbtac-btn-fx"
                 style={{
                   width: '100%',
                   padding: '12px',
