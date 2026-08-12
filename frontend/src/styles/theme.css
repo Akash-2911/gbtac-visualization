@@ -40,6 +40,11 @@
   --status-red-bg: #FEE2E2;
   --status-red-text: #DC2626;
 
+  /* Faint seed-tray dot grid behind the AI Chat thread — warmed to a soil
+     tone rather than reused --ai-accent violet, so it reads as its own
+     greenhouse-adjacent texture instead of a tint of the AI brand color. */
+  --chat-dot-line: rgba(180,83,9,0.10);
+
   --font-body: 'Inter', -apple-system, sans-serif;
 
   --topbar-height: 64px;
@@ -67,6 +72,11 @@
   --text-primary: #E8E9EA;
   --text-secondary: #A8B0BA;
   --text-muted: #6E7681;
+
+  /* A translucent color reads noticeably fainter on a near-black surface —
+     lighter amber at higher alpha than the light-mode value, same asymmetry
+     the chart tint ramps already account for. */
+  --chat-dot-line: rgba(251,191,36,0.16);
 }
 
 /* High contrast mode (item #10) — pushes text/border colors to their

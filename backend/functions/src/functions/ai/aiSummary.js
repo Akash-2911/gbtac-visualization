@@ -59,7 +59,12 @@ app.http("aiSummary", {
         if (!latestDate) {
           return {
             status: 200,
-            jsonBody: { insight: "Insight unavailable" },
+            jsonBody: {
+              insight: "Insight unavailable",
+              totalConsumedKwh: null,
+              totalGeneratedKwh: null,
+              netBalance: null,
+            },
           };
         }
 
@@ -132,7 +137,14 @@ app.http("aiSummary", {
 
       return {
         status: 200,
-        jsonBody: { insight: insightText },
+        jsonBody: {
+          insight: insightText,
+          totalConsumedKwh: totalConsumed,
+          totalGeneratedKwh: totalGenerated,
+          netBalance,
+          from,
+          to,
+        },
       };
     } catch (err) {
       context.error("AI Summary endpoint failed:", err.message);
