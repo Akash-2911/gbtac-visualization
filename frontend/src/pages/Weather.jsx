@@ -115,7 +115,7 @@ export default function Weather() {
 
   return (
     <PageContainer title="Weather" subtitle="Black Diamond weather station vs greenhouse performance">
-      <AIInsightPanel />
+      <AIInsightPanel domain="weather" />
       <ViewToggle value={view} onChange={setView} options={VIEW_OPTIONS} />
       {view === 'powerbi' ? (
         <ReportCard>

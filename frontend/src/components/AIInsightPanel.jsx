@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Zap, Sun, ArrowUp, ArrowDown } from 'lucide-react';
+import { Sparkles, Zap, Sun, Cloud, Thermometer, Droplet, ArrowUp, ArrowDown } from 'lucide-react';
 import { useUser } from '../auth/UserContext';
 import { fetchAiSummary } from '../services/aiService';
 import { highlightMetrics } from './highlightMetrics';
@@ -9,12 +9,45 @@ import { ROLES } from '../constants/roles';
 // button at all rather than clicking it and getting a 403.
 const AI_INSIGHT_ROLES = [ROLES.STAFF, ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.GUEST]; // GUEST MODE
 
-// Click-to-reveal AI Insight — used on all 6 dashboard pages. Doesn't fetch
-// on mount (that was Compare.jsx's original behavior, always burning an AI
-// call + rate-limit budget whether or not anyone looked at it); only fetches
-// the first time it's opened, then caches the result for the rest of the
-// page's lifetime so re-toggling doesn't refetch.
-export default function AIInsightPanel() {
+// Maps the icon key the backend picks per domain (aiSummary.js's
+// SINGLE_METRIC_DOMAINS) to an actual component — keeps icon choice
+// server-driven per domain while this component stays domain-agnostic.
+const ICONS = { zap: Zap, sun: Sun, cloud: Cloud, thermometer: Thermometer, droplet: Droplet };
+
+function Stat({ stat, align = 'start' }) {
+  const Icon = stat.icon && ICONS[stat.icon];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: align === 'end' ? 'flex-end' : 'flex-start' }}>
+      <span
+        style={{
+          display: 'flex',
+          flexDirection: align === 'end' ? 'row-reverse' : 'row',
+          alignItems: 'center',
+          gap: '5px',
+          fontSize: '11px',
+          fontWeight: 600,
+          opacity: 0.8,
+        }}
+      >
+        {Icon && <Icon size={12} />} {stat.label}
+      </span>
+      <span style={{ fontSize: '1.375rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+        {stat.value.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+        <small style={{ fontSize: '0.75rem', fontWeight: 500, opacity: 0.75, marginLeft: '3px' }}>{stat.unit}</small>
+      </span>
+    </div>
+  );
+}
+
+// Click-to-reveal AI Insight — used on all 6 dashboard pages, each passing
+// its own `domain` (see aiSummary.js's SINGLE_METRIC_DOMAINS) so the panel
+// talks about that page's own data instead of every page getting the same
+// generic energy-vs-solar summary. Doesn't fetch on mount (that was
+// Compare.jsx's original behavior, always burning an AI call + rate-limit
+// budget whether or not anyone looked at it); only fetches the first time
+// it's opened, then caches the result for the rest of the page's lifetime
+// so re-toggling doesn't refetch.
+export default function AIInsightPanel({ domain = 'overview' }) {
   const { user } = useUser();
   const [open, setOpen] = useState(false);
   const [summary, setSummary] = useState(null);
@@ -30,7 +63,7 @@ export default function AIInsightPanel() {
     if (next && !fetched) {
       setLoading(true);
       setError(null);
-      fetchAiSummary()
+      fetchAiSummary(domain)
         .then((data) => {
           setSummary(data);
           setFetched(true);
@@ -40,10 +73,7 @@ export default function AIInsightPanel() {
     }
   };
 
-  const hasStats =
-    summary && typeof summary.totalConsumedKwh === 'number' && typeof summary.totalGeneratedKwh === 'number';
-  const deltaKwh = hasStats ? Math.abs(summary.totalGeneratedKwh - summary.totalConsumedKwh) : null;
-  const isSurplus = summary?.netBalance === 'Positive';
+  const hasStats = Boolean(summary?.primary && summary?.secondary);
 
   return (
     <div style={{ marginBottom: '16px' }}>
@@ -126,47 +156,38 @@ export default function AIInsightPanel() {
             {!loading && !error && summary && hasStats && (
               <>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '14px', rowGap: '10px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 600, opacity: 0.8 }}>
-                      <Zap size={12} /> Consumed
-                    </span>
-                    <span style={{ fontSize: '1.375rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
-                      {summary.totalConsumedKwh.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                      <small style={{ fontSize: '0.75rem', fontWeight: 500, opacity: 0.75, marginLeft: '3px' }}>kWh</small>
-                    </span>
-                  </div>
+                  <Stat stat={summary.primary} />
 
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                    <span style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.3)' }} />
-                    <span
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        padding: '3px 9px',
-                        borderRadius: '20px',
-                        whiteSpace: 'nowrap',
-                        background: 'rgba(255,255,255,0.16)',
-                        color: isSurplus ? '#86EFAC' : '#FCA5A5',
-                      }}
-                    >
-                      {isSurplus ? <ArrowUp size={10} /> : <ArrowDown size={10} />}
-                      {deltaKwh.toLocaleString(undefined, { maximumFractionDigits: 0 })} {isSurplus ? 'surplus' : 'short'}
-                    </span>
-                    <span style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.3)' }} />
+                    {summary.pill ? (
+                      <>
+                        <span style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.3)' }} />
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            padding: '3px 9px',
+                            borderRadius: '20px',
+                            whiteSpace: 'nowrap',
+                            background: 'rgba(255,255,255,0.16)',
+                            color: summary.pill.isGood ? '#86EFAC' : '#FCA5A5',
+                          }}
+                        >
+                          {summary.pill.direction === 'up' && <ArrowUp size={10} />}
+                          {summary.pill.direction === 'down' && <ArrowDown size={10} />}
+                          {summary.pill.text}
+                        </span>
+                        <span style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.3)' }} />
+                      </>
+                    ) : (
+                      <span style={{ width: '1px', height: '44px', background: 'rgba(255,255,255,0.3)' }} />
+                    )}
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                    <span style={{ display: 'flex', flexDirection: 'row-reverse', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 600, opacity: 0.8 }}>
-                      <Sun size={12} /> Generated
-                    </span>
-                    <span style={{ fontSize: '1.375rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
-                      {summary.totalGeneratedKwh.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                      <small style={{ fontSize: '0.75rem', fontWeight: 500, opacity: 0.75, marginLeft: '3px' }}>kWh</small>
-                    </span>
-                  </div>
+                  <Stat stat={summary.secondary} align="end" />
                 </div>
 
                 <p
